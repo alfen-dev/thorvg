@@ -63,9 +63,9 @@ Result Canvas::clear(bool free) noexcept
 
 Result Canvas::draw() noexcept
 {
-    TVGLOG("RENDERER", "Draw S. -------------------------------- Canvas(%p)", this);
-    auto ret = pImpl->draw();
-    TVGLOG("RENDERER", "Draw E. -------------------------------- Canvas(%p)", this);
+    TVGLOG_RENDERER("Draw S. -------------------------------- Canvas(%p)", this);
+    auto ret = pImpl->draw(color);
+    TVGLOG_RENDERER("Draw E. -------------------------------- Canvas(%p)", this);
 
     return ret;
 }
@@ -73,9 +73,9 @@ Result Canvas::draw() noexcept
 
 Result Canvas::update(Paint* paint) noexcept
 {
-    TVGLOG("RENDERER", "Update S. ------------------------------ Canvas(%p)", this);
+    TVGLOG_RENDERER("Update S. ------------------------------ Canvas(%p)", this);
     auto ret = pImpl->update(paint, false);
-    TVGLOG("RENDERER", "Update E. ------------------------------ Canvas(%p)", this);
+    TVGLOG_RENDERER("Update E. ------------------------------ Canvas(%p)", this);
 
     return ret;
 }
