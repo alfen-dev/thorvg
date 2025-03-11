@@ -59,7 +59,9 @@ static void _growBorder(SwStrokeBorder* border, uint32_t newPts)
         maxCur += (maxCur >> 1) + 16;
     //OPTIMIZE: use mempool!
     border->pts = static_cast<SwPoint*>(realloc(border->pts, maxCur * sizeof(SwPoint)));
+	TVG_ASSERT_NULL(border->pts);
     border->tags = static_cast<uint8_t*>(realloc(border->tags, maxCur * sizeof(uint8_t)));
+	TVG_ASSERT_NULL(border->tags);
     border->maxPts = maxCur;
 }
 
@@ -116,6 +118,8 @@ static void _borderClose(SwStrokeBorder* border, bool reverse)
 static void _borderCubicTo(SwStrokeBorder* border, const SwPoint& ctrl1, const SwPoint& ctrl2, const SwPoint& to)
 {
     _growBorder(border, 3);
+
+	TVG_ASSERT_NULL(border->pts);
 
     auto pt = border->pts + border->ptsCnt;
     auto tag = border->tags + border->ptsCnt;

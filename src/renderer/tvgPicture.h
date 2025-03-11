@@ -143,11 +143,11 @@ struct Picture::Impl
         return load(loader);
     }
 
-    Result load(uint32_t* data, uint32_t w, uint32_t h, bool copy)
+    Result load(PIXEL_TYPE* data, uint32_t w, uint32_t h, ColorSpace cs, bool copy)
     {
         if (paint || surface) return Result::InsufficientCondition;
 
-        auto loader = static_cast<ImageLoader*>(LoaderMgr::loader(data, w, h, copy));
+        auto loader = static_cast<ImageLoader*>(LoaderMgr::loader(data, w, h, cs, copy));
         if (!loader) return Result::FailedAllocation;
 
         return load(loader);
@@ -184,7 +184,7 @@ struct Picture::Impl
         return new PictureIterator(paint);
     }
 
-    uint32_t* data(uint32_t* w, uint32_t* h)
+    pixel_t* data(uint32_t* w, uint32_t* h)
     {
         //Try it, If not loaded yet.
         load();
@@ -196,7 +196,7 @@ struct Picture::Impl
             if (w) *w = 0;
             if (h) *h = 0;
         }
-        if (surface) return surface->buf32;
+        if (surface) return surface->pixel_buffer;
         else return nullptr;
     }
 

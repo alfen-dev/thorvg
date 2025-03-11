@@ -26,6 +26,7 @@
 #include "tvgCommon.h"
 #include "tvgMath.h"
 #include "tvgRender.h"
+#include "lv_assert.h"
 
 #define SW_CURVE_TYPE_POINT 0
 #define SW_CURVE_TYPE_CUBIC 1
@@ -150,7 +151,7 @@ struct SwFill
         SwRadial radial;
     };
 
-    uint32_t* ctable;
+    PIXEL_TYPE* ctable;
     FillSpread spread;
 
     bool solid = false; //solid color fill with the last color from colorStops
@@ -216,6 +217,10 @@ struct SwShape
     SwBBox       bbox;           //Keep it boundary without stroke region. Using for optimal filling.
 
     bool         fastTrack = false;   //Fast Track: axis-aligned rectangle without any clips?
+
+    ~SwShape();
+    SwShape();
+
 };
 
 struct SwImage
@@ -223,11 +228,11 @@ struct SwImage
     SwOutline*   outline = nullptr;
     SwRle*   rle = nullptr;
     union {
-        pixel_t*  data;      //system based data pointer
-        uint32_t* buf32;     //for explicit 32bits channels
-        uint8_t*  buf8;      //for explicit 8bits grayscale
+        void*  data;      //system based data pointer
+        PIXEL_TYPE* pixel_buffer;     //for explicit 8/16/32bits channels
+        uint8_t* buf8;     //for explicit 8bits channels
     };
-    uint32_t     w, h, stride;
+    uint32_t     w, h, stride_pixels;
     int32_t      ox = 0;         //offset x
     int32_t      oy = 0;         //offset y
     float        scale;
@@ -238,17 +243,20 @@ struct SwImage
 };
 
 typedef uint8_t(*SwMask)(uint8_t s, uint8_t d, uint8_t a);                  //src, dst, alpha
-typedef uint32_t(*SwBlender)(uint32_t s, uint32_t d, uint8_t a);            //src, dst, alpha
-typedef uint32_t(*SwJoin)(uint8_t r, uint8_t g, uint8_t b, uint8_t a);      //color channel join
+template<typename PIXEL_T>
+using SwBlender = PIXEL_T (*)(PIXEL_T s, PIXEL_T d, uint8_t a);             //src, dst, alpha
+template<typename PIXEL_T>
+using SwJoin = PIXEL_T (*)(uint8_t r, uint8_t g, uint8_t b, uint8_t a);     //color channel join
 typedef uint8_t(*SwAlpha)(uint8_t*);                                        //blending alpha
 
 struct SwCompositor;
 
+template<typename PIXEL_T>
 struct SwSurface : RenderSurface
 {
-    SwJoin  join;
+    SwJoin<PIXEL_T>join;                  //color channel join
     SwAlpha alphas[4];                    //Alpha:2, InvAlpha:3, Luma:4, InvLuma:5
-    SwBlender blender = nullptr;          //blender (optional)
+    SwBlender<PIXEL_T> blender = nullptr; //blender (optional)
     SwCompositor* compositor = nullptr;   //compositor (optional)
     BlendMethod blendMethod = BlendMethod::Normal;
 
@@ -262,7 +270,7 @@ struct SwSurface : RenderSurface
     {
     }
 
-    SwSurface(const SwSurface* rhs) : RenderSurface(rhs)
+    SwSurface(const SwSurface<PIXEL_T>* rhs) : RenderSurface(rhs)
     {
         join = rhs->join;
         memcpy(alphas, rhs->alphas, sizeof(alphas));
@@ -274,7 +282,7 @@ struct SwSurface : RenderSurface
 
 struct SwCompositor : RenderCompositor
 {
-    SwSurface* recoverSfc;                  //Recover surface when composition is started
+    SwSurface<PIXEL_TYPE>* recoverSfc;                  //Recover surface when composition is started
     SwCompositor* recoverCmp;               //Recover compositor when composition is done
     SwImage image;
     SwBBox bbox;
@@ -294,21 +302,81 @@ static inline SwCoord TO_SWCOORD(float val)
     return SwCoord(val * 64.0f);
 }
 
-static inline uint32_t JOIN(uint8_t c0, uint8_t c1, uint8_t c2, uint8_t c3)
-{
-    return (c0 << 24 | c1 << 16 | c2 << 8 | c3);
-}
 
-static inline uint32_t ALPHA_BLEND(uint32_t c, uint32_t a)
+template<typename PIXEL_T>
+inline PIXEL_T JOIN(uint8_t c0, uint8_t c1, uint8_t c2, uint8_t c3);
+
+
+static inline uint32_t ALPHA_BLEND(uint32_t c, uint8_t a)
 {
+    LV_ASSERT(false);
     ++a;
     return (((((c >> 8) & 0x00ff00ff) * a) & 0xff00ff00) + ((((c & 0x00ff00ff) * a) >> 8) & 0x00ff00ff));
 }
 
+                            //   rrrrrggggggbbbbb
+#define MASK_RB       63519 // 0b1111100000011111
+#define MASK_G         2016 // 0b0000011111100000
+#define MASK_MUL_RB 4065216 // 0b1111100000011111000000
+#define MASK_MUL_G   129024 // 0b0000011111100000000000
+#define MAX_ALPHA        64 // 6bits+1 with rounding
+
+static inline uint16_t ALPHA_BLEND( uint16_t c, uint8_t alpha ){
+    LV_ASSERT(true);
+  // alpha for foreground multiplication
+  // convert from 8bit to (6bit+1) with rounding
+  // will be in [0..64] inclusive
+  alpha = ( alpha + 2 ) >> 2;
+
+  return (uint16_t)((
+            (  ( alpha * (uint32_t)( c & MASK_RB )
+            ) & MASK_MUL_RB )
+          |
+            (  ( alpha * ( c & MASK_G )
+            ) & MASK_MUL_G )
+         ) >> 6 );
+}
+
 static inline uint32_t INTERPOLATE(uint32_t s, uint32_t d, uint8_t a)
 {
+    LV_ASSERT(false);
     return (((((((s >> 8) & 0xff00ff) - ((d >> 8) & 0xff00ff)) * a) + (d & 0xff00ff00)) & 0xff00ff00) + ((((((s & 0xff00ff) - (d & 0xff00ff)) * a) >> 8) + (d & 0xff00ff)) & 0xff00ff));
 }
+
+static inline uint16_t INTERPOLATE( uint16_t fg, uint16_t bg, uint8_t alpha ){
+
+  // alpha for foreground multiplication
+  // convert from 8bit to (6bit+1) with rounding
+  // will be in [0..64] inclusive
+  alpha = ( alpha + 2 ) >> 2;
+  // "beta" for background multiplication; (6bit+1);
+  // will be in [0..64] inclusive
+  uint8_t beta = MAX_ALPHA - alpha;
+  // so (0..64)*alpha + (0..64)*beta always in 0..64
+
+  return (uint16_t)((
+            (  ( alpha * (uint32_t)( fg & MASK_RB )
+                + beta * (uint32_t)( bg & MASK_RB )
+            ) & MASK_MUL_RB )
+          |
+            (  ( alpha * ( fg & MASK_G )
+                + beta * ( bg & MASK_G )
+            ) & MASK_MUL_G )
+         ) >> 6 );
+}
+
+/*
+  result masks of multiplications
+  uppercase: usable bits of multiplications
+  RRRRRrrrrrrBBBBBbbbbbb // 5-5 bits of red+blue
+        1111100000011111 // from MASK_RB * 1
+  1111100000011111000000 //   to MASK_RB * MAX_ALPHA // 22 bits!
+
+
+  -----GGGGGGgggggg----- // 6 bits of green
+        0000011111100000 // from MASK_G * 1
+  0000011111100000000000 //   to MASK_G * MAX_ALPHA
+*/
 
 static inline uint8_t INTERPOLATE8(uint8_t s, uint8_t d, uint8_t a)
 {
@@ -322,16 +390,30 @@ static inline SwCoord HALF_STROKE(float width)
 
 static inline uint8_t A(uint32_t c)
 {
+    LV_ASSERT(false);
     return ((c) >> 24);
+}
+
+static inline uint8_t A(uint16_t c)
+{
+    // solid
+    return 0xFF;
 }
 
 static inline uint8_t IA(uint32_t c)
 {
+    LV_ASSERT(false);
     return (~(c) >> 24);
+}
+
+static inline uint8_t IA(uint16_t c)
+{
+    return (0);
 }
 
 static inline uint8_t C1(uint32_t c)
 {
+    LV_ASSERT(false);
     return ((c) >> 16);
 }
 
@@ -345,145 +427,141 @@ static inline uint8_t C3(uint32_t c)
     return (c);
 }
 
-static inline uint32_t opBlendInterp(uint32_t s, uint32_t d, uint8_t a)
+static inline uint8_t C1(uint16_t c)
+{
+    return (c & 0xf800) >> 8;
+}
+
+
+static inline uint8_t C2(uint16_t c)
+{
+    return (c & 0x07e0) >> 3;
+}
+
+
+static inline uint8_t C3(uint16_t c)
+{
+    return (c & 0x001f) << 3;
+}
+
+static inline uint32_t SOLID_C(uint32_t color)
+{
+    return (color | 0xff000000);
+}
+static inline uint16_t SOLID_C(uint16_t color)
+{
+    return (color);
+}
+
+template<typename PIXEL_T>
+inline PIXEL_T opBlendInterp(PIXEL_T s, PIXEL_T d, TVG_UNUSED uint8_t a);
+
+template<>
+inline uint32_t opBlendInterp<uint32_t>(uint32_t s, uint32_t d, uint8_t a)
+{
+    LV_ASSERT(false);
+    return INTERPOLATE(s, d, a);
+}
+
+template<>
+inline uint16_t opBlendInterp<uint16_t>(uint16_t s, uint16_t d, uint8_t a)
 {
     return INTERPOLATE(s, d, a);
 }
 
-static inline uint32_t opBlendNormal(uint32_t s, uint32_t d, uint8_t a)
+template<typename PIXEL_T>
+inline PIXEL_T opBlendNormal(PIXEL_T s, PIXEL_T d, TVG_UNUSED uint8_t a);
+
+template<>
+inline uint32_t opBlendNormal<uint32_t>(uint32_t s, uint32_t d, uint8_t a)
+{
+    LV_ASSERT(false);
+    auto t = ALPHA_BLEND(s, a);
+    return t + ALPHA_BLEND(d, IA(t));
+}
+
+template<>
+inline uint16_t opBlendNormal<uint16_t>(uint16_t s, uint16_t d, uint8_t a)
 {
     auto t = ALPHA_BLEND(s, a);
     return t + ALPHA_BLEND(d, IA(t));
 }
 
-static inline uint32_t opBlendPreNormal(uint32_t s, uint32_t d, TVG_UNUSED uint8_t a)
+template<typename PIXEL_T>
+inline PIXEL_T opBlendPreNormal(PIXEL_T s, PIXEL_T d, TVG_UNUSED uint8_t a);
+
+template<>
+inline uint32_t opBlendPreNormal<uint32_t>(uint32_t s, uint32_t d, TVG_UNUSED uint8_t a)
+{
+    LV_ASSERT(false);
+    return s + ALPHA_BLEND(d, IA(s));
+}
+
+template<>
+inline uint16_t opBlendPreNormal<uint16_t>(uint16_t s, uint16_t d, TVG_UNUSED uint8_t a)
 {
     return s + ALPHA_BLEND(d, IA(s));
 }
 
-static inline uint32_t opBlendSrcOver(uint32_t s, TVG_UNUSED uint32_t d, TVG_UNUSED uint8_t a)
+template<typename PIXEL_T>
+inline PIXEL_T opBlendSrcOver(PIXEL_T s, PIXEL_T d, TVG_UNUSED uint8_t a);
+
+template<>
+inline uint32_t opBlendSrcOver<uint32_t>(uint32_t s, TVG_UNUSED uint32_t d, TVG_UNUSED uint8_t a)
 {
     return s;
 }
 
-//TODO: BlendMethod could remove the alpha parameter.
-static inline uint32_t opBlendDifference(uint32_t s, uint32_t d, TVG_UNUSED uint8_t a)
+template<>
+inline uint16_t opBlendSrcOver<uint16_t>(uint16_t s, TVG_UNUSED uint16_t d, TVG_UNUSED uint8_t a)
 {
-    //if (s > d) => s - d
-    //else => d - s
-    auto c1 = (C1(s) > C1(d)) ? (C1(s) - C1(d)) : (C1(d) - C1(s));
-    auto c2 = (C2(s) > C2(d)) ? (C2(s) - C2(d)) : (C2(d) - C2(s));
-    auto c3 = (C3(s) > C3(d)) ? (C3(s) - C3(d)) : (C3(d) - C3(s));
-    return JOIN(255, c1, c2, c3);
+    return s;
 }
 
-static inline uint32_t opBlendExclusion(uint32_t s, uint32_t d, TVG_UNUSED uint8_t a)
-{
-    // (s + d) - (2 * s * d)
-    auto c1 = C1(s) + C1(d) - 2 * MULTIPLY(C1(s), C1(d));
-    tvg::clamp(c1, 0, 255);
-    auto c2 = C2(s) + C2(d) - 2 * MULTIPLY(C2(s), C2(d));
-    tvg::clamp(c2, 0, 255);
-    auto c3 = C3(s) + C3(d) - 2 * MULTIPLY(C3(s), C3(d));
-    tvg::clamp(c3, 0, 255);
-    return JOIN(255, c1, c2, c3);
-}
+template<typename PIXEL_T>
+inline PIXEL_T opBlendDifference(PIXEL_T s, PIXEL_T d, TVG_UNUSED uint8_t a);
 
-static inline uint32_t opBlendAdd(uint32_t s, uint32_t d, TVG_UNUSED uint8_t a)
-{
-    // s + d
-    auto c1 = std::min(C1(s) + C1(d), 255);
-    auto c2 = std::min(C2(s) + C2(d), 255);
-    auto c3 = std::min(C3(s) + C3(d), 255);
-    return JOIN(255, c1, c2, c3);
-}
 
-static inline uint32_t opBlendScreen(uint32_t s, uint32_t d, TVG_UNUSED uint8_t a)
-{
-    // s + d - s * d
-    auto c1 = C1(s) + C1(d) - MULTIPLY(C1(s), C1(d));
-    auto c2 = C2(s) + C2(d) - MULTIPLY(C2(s), C2(d));
-    auto c3 = C3(s) + C3(d) - MULTIPLY(C3(s), C3(d));
-    return JOIN(255, c1, c2, c3);
-}
+template<typename PIXEL_T>
+inline PIXEL_T opBlendExclusion(PIXEL_T s, PIXEL_T d, TVG_UNUSED uint8_t a);
 
-static inline uint32_t opBlendMultiply(uint32_t s, uint32_t d, TVG_UNUSED uint8_t a)
-{
-    // s * d
-    auto c1 = MULTIPLY(C1(s), C1(d));
-    auto c2 = MULTIPLY(C2(s), C2(d));
-    auto c3 = MULTIPLY(C3(s), C3(d));
-    return JOIN(255, c1, c2, c3);
-}
 
-static inline uint32_t opBlendOverlay(uint32_t s, uint32_t d, TVG_UNUSED uint8_t a)
-{
-    // if (2 * d < da) => 2 * s * d,
-    // else => 1 - 2 * (1 - s) * (1 - d)
-    auto c1 = (C1(d) < 128) ? std::min(255, 2 * MULTIPLY(C1(s), C1(d))) : (255 - std::min(255, 2 * MULTIPLY(255 - C1(s), 255 - C1(d))));
-    auto c2 = (C2(d) < 128) ? std::min(255, 2 * MULTIPLY(C2(s), C2(d))) : (255 - std::min(255, 2 * MULTIPLY(255 - C2(s), 255 - C2(d))));
-    auto c3 = (C3(d) < 128) ? std::min(255, 2 * MULTIPLY(C3(s), C3(d))) : (255 - std::min(255, 2 * MULTIPLY(255 - C3(s), 255 - C3(d))));
-    return JOIN(255, c1, c2, c3);
-}
+template<typename PIXEL_T>
+inline PIXEL_T opBlendAdd(PIXEL_T s, PIXEL_T d, TVG_UNUSED uint8_t a);
 
-static inline uint32_t opBlendDarken(uint32_t s, uint32_t d, TVG_UNUSED uint8_t a)
-{
-    // min(s, d)
-    auto c1 = std::min(C1(s), C1(d));
-    auto c2 = std::min(C2(s), C2(d));
-    auto c3 = std::min(C3(s), C3(d));
-    return JOIN(255, c1, c2, c3);
-}
+template<typename PIXEL_T>
+inline PIXEL_T opBlendScreen(PIXEL_T s, PIXEL_T d, TVG_UNUSED uint8_t a);
 
-static inline uint32_t opBlendLighten(uint32_t s, uint32_t d, TVG_UNUSED uint8_t a)
-{
-    // max(s, d)
-    auto c1 = std::max(C1(s), C1(d));
-    auto c2 = std::max(C2(s), C2(d));
-    auto c3 = std::max(C3(s), C3(d));
-    return JOIN(255, c1, c2, c3);
-}
 
-static inline uint32_t opBlendColorDodge(uint32_t s, uint32_t d, TVG_UNUSED uint8_t a)
-{
-    // d / (1 - s)
-    s = 0xffffffff - s;
-    auto c1 = (C1(s) == 0) ? C1(d) : std::min(C1(d) * 255 / C1(s), 255);
-    auto c2 = (C2(s) == 0) ? C2(d) : std::min(C2(d) * 255 / C2(s), 255);
-    auto c3 = (C3(s) == 0) ? C3(d) : std::min(C3(d) * 255 / C3(s), 255);
-    return JOIN(255, c1, c2, c3);
-}
+template<typename PIXEL_T>
+inline PIXEL_T opBlendMultiply(PIXEL_T s, PIXEL_T d, TVG_UNUSED uint8_t a);
 
-static inline uint32_t opBlendColorBurn(uint32_t s, uint32_t d, TVG_UNUSED uint8_t a)
-{
-    // 1 - (1 - d) / s
-    auto id = 0xffffffff - d;
-    auto c1 = (C1(s) == 0) ? C1(d) : 255 - std::min(C1(id) * 255 / C1(s), 255);
-    auto c2 = (C2(s) == 0) ? C2(d) : 255 - std::min(C2(id) * 255 / C2(s), 255);
-    auto c3 = (C3(s) == 0) ? C3(d) : 255 - std::min(C3(id) * 255 / C3(s), 255);
 
-    return JOIN(255, c1, c2, c3);
-}
+template<typename PIXEL_T>
+inline PIXEL_T opBlendOverlay(PIXEL_T s, PIXEL_T d, TVG_UNUSED uint8_t a);
 
-static inline uint32_t opBlendHardLight(uint32_t s, uint32_t d, TVG_UNUSED uint8_t a)
-{
-    // if (s < sa), (2 * s * d)
-    // else (sa * da) - 2 * (da - s) * (sa - d)
-    auto c1 = (C1(s) < 128) ? std::min(255, 2 * MULTIPLY(C1(s), C1(d))) : (255 - std::min(255, 2 * MULTIPLY(255 - C1(s), 255 - C1(d))));
-    auto c2 = (C2(s) < 128) ? std::min(255, 2 * MULTIPLY(C2(s), C2(d))) : (255 - std::min(255, 2 * MULTIPLY(255 - C2(s), 255 - C2(d))));
-    auto c3 = (C3(s) < 128) ? std::min(255, 2 * MULTIPLY(C3(s), C3(d))) : (255 - std::min(255, 2 * MULTIPLY(255 - C3(s), 255 - C3(d))));
-    return JOIN(255, c1, c2, c3);
-}
+template<typename PIXEL_T>
+inline PIXEL_T opBlendDarken(PIXEL_T s, PIXEL_T d, TVG_UNUSED uint8_t a);
 
-static inline uint32_t opBlendSoftLight(uint32_t s, uint32_t d, TVG_UNUSED uint8_t a)
-{
-    //(255 - 2 * s) * (d * d) + (2 * s * b)
-    auto c1 = MULTIPLY(255 - std::min(255, 2 * C1(s)), MULTIPLY(C1(d), C1(d))) + MULTIPLY(std::min(255, 2 * C1(s)), C1(d));
-    auto c2 = MULTIPLY(255 - std::min(255, 2 * C2(s)), MULTIPLY(C2(d), C2(d))) + MULTIPLY(std::min(255, 2 * C2(s)), C2(d));
-    auto c3 = MULTIPLY(255 - std::min(255, 2 * C3(s)), MULTIPLY(C3(d), C3(d))) + MULTIPLY(std::min(255, 2 * C3(s)), C3(d));
-    return JOIN(255, c1, c2, c3);
-}
+template<typename PIXEL_T>
+inline PIXEL_T opBlendLighten(PIXEL_T s, PIXEL_T d, TVG_UNUSED uint8_t a);
 
+
+template<typename PIXEL_T>
+inline PIXEL_T opBlendColorDodge(PIXEL_T s, PIXEL_T d, TVG_UNUSED uint8_t a);
+
+
+template<typename PIXEL_T>
+inline PIXEL_T opBlendColorBurn(PIXEL_T s, PIXEL_T d, TVG_UNUSED uint8_t a);
+
+
+template<typename PIXEL_T>
+inline PIXEL_T opBlendHardLight(PIXEL_T s, PIXEL_T d, TVG_UNUSED uint8_t a);
+
+template<typename PIXEL_T>
+inline PIXEL_T opBlendSoftLight(PIXEL_T s, PIXEL_T d, TVG_UNUSED uint8_t a);
+
+#include "src\renderer\sw_engine\tvgSwCommon.tpp"
 
 int64_t mathMultiply(int64_t a, int64_t b);
 int64_t mathDivide(int64_t a, int64_t b);
@@ -512,8 +590,8 @@ void shapeResetStroke(SwShape* shape, const RenderShape* rshape, const Matrix& t
 bool shapeGenStrokeRle(SwShape* shape, const RenderShape* rshape, const Matrix& transform, const SwBBox& clipRegion, SwBBox& renderRegion, SwMpool* mpool, unsigned tid);
 void shapeFree(SwShape* shape);
 void shapeDelStroke(SwShape* shape);
-bool shapeGenFillColors(SwShape* shape, const Fill* fill, const Matrix& transform, SwSurface* surface, uint8_t opacity, bool ctable);
-bool shapeGenStrokeFillColors(SwShape* shape, const Fill* fill, const Matrix& transform, SwSurface* surface, uint8_t opacity, bool ctable);
+bool shapeGenFillColors(SwShape* shape, const Fill* fill, const Matrix& transform, SwSurface<PIXEL_TYPE>* surface, uint8_t opacity, bool ctable);
+bool shapeGenStrokeFillColors(SwShape* shape, const Fill* fill, const Matrix& transform, SwSurface<PIXEL_TYPE>* surface, uint8_t opacity, bool ctable);
 void shapeResetFill(SwShape* shape);
 void shapeResetStrokeFill(SwShape* shape);
 void shapeDelFill(SwShape* shape);
@@ -530,7 +608,7 @@ void imageDelOutline(SwImage* image, SwMpool* mpool, uint32_t tid);
 void imageReset(SwImage* image);
 void imageFree(SwImage* image);
 
-bool fillGenColorTable(SwFill* fill, const Fill* fdata, const Matrix& transform, SwSurface* surface, uint8_t opacity, bool ctable);
+bool fillGenColorTable(SwFill* fill, const Fill* fdata, const Matrix& transform, SwSurface<PIXEL_TYPE>* surface, uint8_t opacity, bool ctable);
 const Fill::ColorStop* fillFetchSolid(const SwFill* fill, const Fill* fdata);
 void fillReset(SwFill* fill);
 void fillFree(SwFill* fill);
@@ -538,15 +616,20 @@ void fillFree(SwFill* fill);
 //OPTIMIZE_ME: Skip the function pointer access
 void fillLinear(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32_t len, SwMask maskOp, uint8_t opacity);                                   //composite masking ver.
 void fillLinear(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwMask maskOp, uint8_t opacity);                     //direct masking ver.
-void fillLinear(const SwFill* fill, uint32_t* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender op, uint8_t a);                                         //blending ver.
-void fillLinear(const SwFill* fill, uint32_t* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender op, SwBlender op2, uint8_t a);                          //blending + BlendingMethod(op2) ver.
-void fillLinear(const SwFill* fill, uint32_t* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwAlpha alpha, uint8_t csize, uint8_t opacity);     //matting ver.
+
+void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PIXEL_TYPE> op, uint8_t a);                                         //blending ver.
+void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PIXEL_TYPE> op, SwBlender<PIXEL_TYPE> op2, uint8_t a);                          //blending + BlendingMethod(op2) ver.
+void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwAlpha alpha, uint8_t csize, uint8_t opacity);     //matting ver.
 
 void fillRadial(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32_t len, SwMask op, uint8_t a);                                             //composite masking ver.
 void fillRadial(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwMask op, uint8_t a) ;                              //direct masking ver.
-void fillRadial(const SwFill* fill, uint32_t* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender op, uint8_t a);                                         //blending ver.
-void fillRadial(const SwFill* fill, uint32_t* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender op, SwBlender op2, uint8_t a);                          //blending + BlendingMethod(op2) ver.
-void fillRadial(const SwFill* fill, uint32_t* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwAlpha alpha, uint8_t csize, uint8_t opacity);     //matting ver.
+
+void fillRadial(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PIXEL_TYPE> op, uint8_t a);                                         //blending ver.
+void fillRadial(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PIXEL_TYPE> op, SwBlender<PIXEL_TYPE> op2, uint8_t a);                          //blending + BlendingMethod(op2) ver.
+void fillRadial(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwAlpha alpha, uint8_t csize, uint8_t opacity);     //matting ver.
+
+#include "src\renderer\sw_engine\tvgSwFill.tpp"
+
 
 SwRle* rleRender(SwRle* rle, const SwOutline* outline, const SwBBox& renderRegion, bool antiAlias);
 SwRle* rleRender(const SwBBox* bbox);
@@ -566,27 +649,35 @@ void mpoolRetStrokeOutline(SwMpool* mpool, unsigned idx);
 SwOutline* mpoolReqDashOutline(SwMpool* mpool, unsigned idx);
 void mpoolRetDashOutline(SwMpool* mpool, unsigned idx);
 
-bool rasterCompositor(SwSurface* surface);
-bool rasterGradientShape(SwSurface* surface, SwShape* shape, const Fill* fdata, uint8_t opacity);
-bool rasterShape(SwSurface* surface, SwShape* shape, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-bool rasterImage(SwSurface* surface, SwImage* image, const Matrix& transform, const SwBBox& bbox, uint8_t opacity);
-bool rasterStroke(SwSurface* surface, SwShape* shape, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-bool rasterGradientStroke(SwSurface* surface, SwShape* shape, const Fill* fdata, uint8_t opacity);
-bool rasterClear(SwSurface* surface, uint32_t x, uint32_t y, uint32_t w, uint32_t h, pixel_t val = 0);
-void rasterPixel32(uint32_t *dst, uint32_t val, uint32_t offset, int32_t len);
-void rasterTranslucentPixel32(uint32_t* dst, uint32_t* src, uint32_t len, uint8_t opacity);
-void rasterPixel32(uint32_t* dst, uint32_t* src, uint32_t len, uint8_t opacity);
+bool rasterCompositor(SwSurface<PIXEL_TYPE>* surface);
+bool rasterGradientShape(SwSurface<PIXEL_TYPE>* surface, SwShape* shape, const Fill* fdata, uint8_t opacity);
+bool rasterShape(SwSurface<PIXEL_TYPE>* surface, SwShape* shape, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+bool rasterImage(SwSurface<PIXEL_TYPE>* surface, SwImage* image, const Matrix& transform, const SwBBox& bbox, uint8_t opacity);
+bool rasterStroke(SwSurface<PIXEL_TYPE>* surface, SwShape* shape, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+bool rasterGradientStroke(SwSurface<PIXEL_TYPE>* surface, SwShape* shape, const Fill* fdata, uint8_t opacity);
+bool rasterClear(SwSurface<PIXEL_TYPE>* surface, uint32_t x, uint32_t y, uint32_t w, uint32_t h, PIXEL_TYPE val = 0);
+
+void rasterPixel(uint32_t *dst, uint32_t val, uint32_t offset, int32_t len);
+void rasterPixel(uint16_t *dst, uint16_t val, uint32_t offset, int32_t len);
+template<typename PIXEL_T>
+void rasterTranslucentPixel(PIXEL_T* dst, PIXEL_T* src, uint32_t len, uint8_t opacity);
+void rasterPixel(uint32_t* dst, uint32_t* src, uint32_t len, uint8_t opacity);
+void rasterPixel(uint16_t *dst, uint16_t* src, uint32_t len, uint8_t opacity);
 void rasterGrayscale8(uint8_t *dst, uint8_t val, uint32_t offset, int32_t len);
-void rasterXYFlip(uint32_t* src, uint32_t* dst, int32_t stride, int32_t w, int32_t h, const SwBBox& bbox, bool flipped);
+template<typename PIXEL_T>
+void rasterXYFlip(PIXEL_T* src, PIXEL_T* dst, int32_t stride, int32_t w, int32_t h, const SwBBox& bbox, bool flipped);
 void rasterUnpremultiply(RenderSurface* surface);
 void rasterPremultiply(RenderSurface* surface);
 bool rasterConvertCS(RenderSurface* surface, ColorSpace to);
 uint32_t rasterUnpremultiply(uint32_t data);
 
-bool effectGaussianBlur(SwCompositor* cmp, SwSurface* surface, const RenderEffectGaussianBlur* params);
+#include "src\renderer\sw_engine\tvgSwRaster.tpp"
+
+
+bool effectGaussianBlur(SwCompositor* cmp, SwSurface<PIXEL_TYPE>* surface, const RenderEffectGaussianBlur* params);
 bool effectGaussianBlurRegion(RenderEffectGaussianBlur* effect);
 void effectGaussianBlurUpdate(RenderEffectGaussianBlur* effect, const Matrix& transform);
-bool effectDropShadow(SwCompositor* cmp, SwSurface* surfaces[2], const RenderEffectDropShadow* params, bool direct);
+bool effectDropShadow(SwCompositor* cmp, SwSurface<PIXEL_TYPE>* surfaces[2], const RenderEffectDropShadow* params, bool direct);
 bool effectDropShadowRegion(RenderEffectDropShadow* effect);
 void effectDropShadowUpdate(RenderEffectDropShadow* effect, const Matrix& transform);
 void effectFillUpdate(RenderEffectFill* effect);
@@ -596,4 +687,7 @@ bool effectTint(SwCompositor* cmp, const RenderEffectTint* params, bool direct);
 void effectTritoneUpdate(RenderEffectTritone* effect);
 bool effectTritone(SwCompositor* cmp, const RenderEffectTritone* params, bool direct);
 
+
+
 #endif /* _TVG_SW_COMMON_H_ */
+ 

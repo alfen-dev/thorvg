@@ -41,11 +41,11 @@ RawLoader::RawLoader() : ImageLoader(FileType::Raw)
 
 RawLoader::~RawLoader()
 {
-    if (copy) free(surface.buf32);
+    if (copy) free(surface.pixel_buffer);
 }
 
 
-bool RawLoader::open(const uint32_t* data, uint32_t w, uint32_t h, bool copy)
+bool RawLoader::open(const PIXEL_TYPE* data, uint32_t w, uint32_t h, ColorSpace cs, bool copy)
 {
     if (!LoadModule::read()) return true;
 
@@ -56,18 +56,18 @@ bool RawLoader::open(const uint32_t* data, uint32_t w, uint32_t h, bool copy)
     this->copy = copy;
 
     if (copy) {
-        surface.buf32 = (uint32_t*)malloc(sizeof(uint32_t) * w * h);
-        if (!surface.buf32) return false;
-        memcpy((void*)surface.buf32, data, sizeof(uint32_t) * w * h);
+        surface.pixel_buffer = (PIXEL_TYPE*)malloc(sizeof(PIXEL_TYPE) * w * h);
+        if (!surface.pixel_buffer) return false;
+        memcpy((void*)surface.pixel_buffer, data, sizeof(PIXEL_TYPE) * w * h);
     }
-    else surface.buf32 = const_cast<uint32_t*>(data);
+    else surface.pixel_buffer = const_cast<PIXEL_TYPE*>(data);
 
     //setup the surface
-    surface.stride = w;
+    surface.stride_pixels = w;
     surface.w = w;
     surface.h = h;
-    surface.cs = ColorSpace::ARGB8888;
-    surface.channelSize = sizeof(uint32_t);
+    surface.cs = cs;
+    surface.channelSize = sizeof(PIXEL_TYPE);
     surface.premultiplied = true;
 
     return true;

@@ -191,11 +191,11 @@ TVG_DEPRECATED Result Picture::load(const char* data, uint32_t size, bool copy) 
 }
 
 
-Result Picture::load(uint32_t* data, uint32_t w, uint32_t h, bool copy) noexcept
+Result Picture::load(PIXEL_TYPE* data, uint32_t w, uint32_t h, ColorSpace cs, bool copy) noexcept
 {
     if (!data || w <= 0 || h <= 0) return Result::InvalidArguments;
 
-    return pImpl->load(data, w, h, copy);
+    return pImpl->load(data, w, h, cs, copy);
 }
 
 

@@ -7,6 +7,8 @@
 #include <string>
 #include <list>
 
+#include "thorvg_capi.h"
+
 #ifdef TVG_API
     #undef TVG_API
 #endif
@@ -89,6 +91,20 @@ enum class Result
     Unknown                ///< The value returned in all other cases.
 };
 
+enum ColorSpace : uint8_t
+{
+#if PIXEL_TYPE_SIZE == 4
+    ABGR8888    = TVG_COLORSPACE_ABGR8888  ,      //The channels are joined in the order: alpha, blue, green, red. Colors are alpha-premultiplied.
+    ARGB8888    = TVG_COLORSPACE_ARGB8888  ,      //The channels are joined in the order: alpha, red, green, blue. Colors are alpha-premultiplied.
+    ABGR8888S   = TVG_COLORSPACE_ABGR8888S ,      //The w are joined in the order: alpha, blue, green, red. Colors are un-alpha-premultiplied.
+    ARGB8888S   = TVG_COLORSPACE_ARGB8888S ,      //The channels are joined in the order: alpha, red, green, blue. Colors are un-alpha-premultiplied.
+#elif PIXEL_TYPE_SIZE == 2
+    RGB565      = TVG_COLORSPACE_RGB565    ,
+#elif PIXEL_TYPE_SIZE == 1
+#endif    
+    Grayscale8  = TVG_COLORSPACE_GRAYSCALE8,      //One single channel data.
+    Unsupported = TVG_COLORSPACE_UNKNOWN          //TODO: Change to the default, At the moment, we put it in the last to align with SwCanvas::Colorspace.
+};
 
 /**
  * @brief Enumeration specifying the values of the path commands accepted by TVG.
@@ -1330,7 +1346,7 @@ public:
      *
      * @since 0.9
      */
-    Result load(uint32_t* data, uint32_t w, uint32_t h, bool copy) noexcept;
+    Result load(PIXEL_TYPE* data, uint32_t w, uint32_t h, ColorSpace cs, bool copy) noexcept;
 
     /**
      * @brief Retrieve a paint object from the Picture scene by its Unique ID.
@@ -1638,17 +1654,6 @@ public:
     ~SwCanvas();
 
     /**
-     * @brief Enumeration specifying the methods of combining the 8-bit color channels into 32-bit color.
-     */
-    enum Colorspace
-    {
-        ABGR8888 = 0,      ///< The channels are joined in the order: alpha, blue, green, red. Colors are alpha-premultiplied. (a << 24 | b << 16 | g << 8 | r)
-        ARGB8888,          ///< The channels are joined in the order: alpha, red, green, blue. Colors are alpha-premultiplied. (a << 24 | r << 16 | g << 8 | b)
-        ABGR8888S,         ///< The channels are joined in the order: alpha, blue, green, red. Colors are un-alpha-premultiplied. @since 0.12
-        ARGB8888S,         ///< The channels are joined in the order: alpha, red, green, blue. Colors are un-alpha-premultiplied. @since 0.12
-    };
-
-    /**
      * @brief Enumeration specifying the methods of Memory Pool behavior policy.
      * @since 0.4
      */
@@ -1679,7 +1684,8 @@ public:
      * @see Canvas::viewport()
      * @see Canvas::sync()
     */
-    Result target(uint32_t* buffer, uint32_t stride, uint32_t w, uint32_t h, Colorspace cs) noexcept;
+   template<typename PIXEL_T>
+   Result target(PIXEL_T* buffer, uint32_t stride_pixels, uint32_t w, uint32_t h, ColorSpace cs) noexcept;
 
     /**
      * @brief Set sw engine memory pool behavior policy.
@@ -2176,5 +2182,6 @@ std::unique_ptr<T> cast(Fill* fill)
 /** @}*/
 
 } //namespace
+
 
 #endif //_THORVG_H_

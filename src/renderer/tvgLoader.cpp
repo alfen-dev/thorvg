@@ -66,7 +66,12 @@ uintptr_t HASH_KEY(const char* data)
 /* Internal Class Implementation                                        */
 /************************************************************************/
 
-ColorSpace ImageLoader::cs = ColorSpace::ARGB8888;
+
+#if PIXEL_TYPE_SIZE == 4
+    ColorSpace ImageLoader::cs = ColorSpace::ARGB8888;
+#elif PIXEL_TYPE_SIZE == 2
+    ColorSpace ImageLoader::cs = ColorSpace::RGB565;
+#endif        
 
 static Key key;
 static Inlist<LoadModule> _activeLoaders;
@@ -415,7 +420,7 @@ LoadModule* LoaderMgr::loader(const char* data, uint32_t size, const string& mim
 }
 
 
-LoadModule* LoaderMgr::loader(const uint32_t *data, uint32_t w, uint32_t h, bool copy)
+LoadModule* LoaderMgr::loader(const PIXEL_TYPE *data, uint32_t w, uint32_t h, ColorSpace cs, bool copy)
 {
     //Note that users could use the same data pointer with the different content.
     //Thus caching is only valid for shareable.
@@ -426,7 +431,7 @@ LoadModule* LoaderMgr::loader(const uint32_t *data, uint32_t w, uint32_t h, bool
 
     //function is dedicated for raw images only
     auto loader = new RawLoader;
-    if (loader->open(data, w, h, copy)) {
+    if (loader->open(data, w, h, cs, copy)) {
         if (!copy) {
             loader->hashkey = HASH_KEY((const char*)data);
             ScopedLock lock(key);

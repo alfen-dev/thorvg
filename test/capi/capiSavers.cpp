@@ -114,7 +114,7 @@ TEST_CASE("Save scene into tvg", "[capiSaver]")
     uint32_t* data = (uint32_t*)malloc(sizeof(uint32_t) * (200*300));
 
     if (data && fread(data, sizeof(uint32_t), 200 * 300, file) > 0) {
-        REQUIRE(tvg_picture_load_raw(picture, data, 200, 300, true) == TVG_RESULT_SUCCESS);
+        REQUIRE(tvg_picture_load_raw(picture, data, 200, 300, TVG_COLORSPACE_ARGB8888, true) == TVG_RESULT_SUCCESS);
         REQUIRE(tvg_saver_save(saver, picture, TEST_DIR"/test.tvg", true) == TVG_RESULT_SUCCESS);
         REQUIRE(tvg_saver_sync(saver) == TVG_RESULT_SUCCESS);
     }

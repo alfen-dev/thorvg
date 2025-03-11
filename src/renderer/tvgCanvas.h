@@ -24,7 +24,9 @@
 #define _TVG_CANVAS_H_
 
 #include "tvgPaint.h"
+#include "tvgRender.h"
 
+#include <list>
 
 enum Status : uint8_t {Synced = 0, Updating, Drawing, Damaged};
 

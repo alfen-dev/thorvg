@@ -18,6 +18,7 @@
 #ifndef __THORVG_CAPI_H__
 #define __THORVG_CAPI_H__
 
+#include "config.h"
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -437,10 +438,17 @@ typedef enum {
  * \brief Enumeration specifying the methods of combining the 8-bit color channels into 32-bit color.
  */
 typedef enum {
-    TVG_COLORSPACE_ABGR8888 = 0, ///< The channels are joined in the order: alpha, blue, green, red. Colors are alpha-premultiplied. (a << 24 | b << 16 | g << 8 | r)
-    TVG_COLORSPACE_ARGB8888,     ///< The channels are joined in the order: alpha, red, green, blue. Colors are alpha-premultiplied. (a << 24 | r << 16 | g << 8 | b)
-    TVG_COLORSPACE_ABGR8888S,    ///< The channels are joined in the order: alpha, blue, green, red. Colors are un-alpha-premultiplied. @since 0.13
-    TVG_COLORSPACE_ARGB8888S     ///< The channels are joined in the order: alpha, red, green, blue. Colors are un-alpha-premultiplied. @since 0.13
+#if PIXEL_TYPE_SIZE == 4
+    TVG_COLORSPACE_ABGR8888  = 0, ///< The channels are joined in the order: alpha, blue, green, red. Colors are alpha-premultiplied. (a << 24 | b << 16 | g << 8 | r)
+    TVG_COLORSPACE_ARGB8888  = 1,     ///< The channels are joined in the order: alpha, red, green, blue. Colors are alpha-premultiplied. (a << 24 | r << 16 | g << 8 | b)
+    TVG_COLORSPACE_ABGR8888S = 2,    ///< The channels are joined in the order: alpha, blue, green, red. Colors are un-alpha-premultiplied. @since 0.13
+    TVG_COLORSPACE_ARGB8888S = 3,     ///< The channels are joined in the order: alpha, red, green, blue. Colors are un-alpha-premultiplied. @since 0.13
+#elif PIXEL_TYPE_SIZE == 2
+    TVG_COLORSPACE_RGB565     = 4,
+#elif PIXEL_TYPE_SIZE == 1
+#endif
+    TVG_COLORSPACE_GRAYSCALE8 = 5,
+    TVG_COLORSPACE_UNKNOWN = 6
 } Tvg_Colorspace;
 
 
@@ -495,7 +503,7 @@ TVG_API Tvg_Canvas* tvg_swcanvas_create(void);
 *
 * \see Tvg_Colorspace
 */
-TVG_API Tvg_Result tvg_swcanvas_set_target(Tvg_Canvas* canvas, uint32_t* buffer, uint32_t stride, uint32_t w, uint32_t h, Tvg_Colorspace cs);
+TVG_API Tvg_Result tvg_swcanvas_set_target(Tvg_Canvas* canvas, PIXEL_TYPE* buffer, uint32_t stride_pixels, uint32_t w, uint32_t h, Tvg_Colorspace cs);
 
 
 /*!
@@ -2001,7 +2009,7 @@ TVG_API Tvg_Result tvg_picture_load(Tvg_Paint* paint, const char* path);
 *
 * \since 0.9
 */
-TVG_API Tvg_Result tvg_picture_load_raw(Tvg_Paint* paint, uint32_t *data, uint32_t w, uint32_t h, bool copy);
+TVG_API Tvg_Result tvg_picture_load_raw(Tvg_Paint* paint, PIXEL_TYPE *data, uint32_t w, uint32_t h, Tvg_Colorspace cs, bool copy);
 
 
 /*!

@@ -20,22 +20,9 @@
  * SOFTWARE.
  */
 
-#ifndef _TVG_LOADER_H_
-#define _TVG_LOADER_H_
+#include "tvgSwCommon.h"
+#include "tvgMath.h"
+#include "tvgRender.h"
+#include "lv_assert.h"
 
-#include "tvgLoadModule.h"
 
-struct LoaderMgr
-{
-    static bool init();
-    static bool term();
-    static LoadModule* loader(const string& path, bool* invalid);
-    static LoadModule* loader(const char* data, uint32_t size, const string& mimeType, bool copy);
-    static LoadModule* loader(const PIXEL_TYPE* data, uint32_t w, uint32_t h, ColorSpace cs, bool copy);
-    static LoadModule* loader(const char* name, const char* data, uint32_t size, const string& mimeType, bool copy);
-    static LoadModule* loader(const char* key);
-    static bool retrieve(const string& path);
-    static bool retrieve(LoadModule* loader);
-};
-
-#endif //_TVG_LOADER_H_

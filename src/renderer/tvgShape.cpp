@@ -271,6 +271,9 @@ Result Shape::fill(uint8_t r, uint8_t g, uint8_t b, uint8_t a) noexcept
     pImpl->rs.color[0] = r;
     pImpl->rs.color[1] = g;
     pImpl->rs.color[2] = b;
+    if (a < 255) {
+        a =255;
+    }
     pImpl->rs.color[3] = a;
     pImpl->rFlag |= RenderUpdateFlag::Color;
 

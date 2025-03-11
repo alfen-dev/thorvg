@@ -279,6 +279,9 @@ struct Shape::Impl
         rs.stroke->color[0] = r;
         rs.stroke->color[1] = g;
         rs.stroke->color[2] = b;
+    if (a < 255) {
+        a =255;
+    }
         rs.stroke->color[3] = a;
 
         rFlag |= RenderUpdateFlag::Stroke;

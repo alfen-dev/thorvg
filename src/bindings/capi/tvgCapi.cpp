@@ -28,8 +28,12 @@
 #include <thorvg_lottie.h>
 #endif
 
+#include "src/renderer/tvgSwCanvas.tpp"
+
+
 using namespace std;
 using namespace tvg;
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -83,10 +87,10 @@ TVG_API Tvg_Result tvg_swcanvas_set_mempool(Tvg_Canvas* canvas, Tvg_Mempool_Poli
 }
 
 
-TVG_API Tvg_Result tvg_swcanvas_set_target(Tvg_Canvas* canvas, uint32_t* buffer, uint32_t stride, uint32_t w, uint32_t h, Tvg_Colorspace cs)
+TVG_API Tvg_Result tvg_swcanvas_set_target(Tvg_Canvas* canvas, PIXEL_TYPE* buffer, uint32_t stride_pixels, uint32_t w, uint32_t h, Tvg_Colorspace cs)
 {
     if (!canvas) return TVG_RESULT_INVALID_ARGUMENT;
-    return (Tvg_Result) reinterpret_cast<SwCanvas*>(canvas)->target(buffer, stride, w, h, static_cast<SwCanvas::Colorspace>(cs));
+    return (Tvg_Result) reinterpret_cast<SwCanvas*>(canvas)->target(buffer, stride_pixels, w, h, static_cast<ColorSpace>(cs));
 }
 
 
@@ -545,10 +549,10 @@ TVG_API Tvg_Result tvg_picture_load(Tvg_Paint* paint, const char* path)
 }
 
 
-TVG_API Tvg_Result tvg_picture_load_raw(Tvg_Paint* paint, uint32_t *data, uint32_t w, uint32_t h, bool copy)
+TVG_API Tvg_Result tvg_picture_load_raw(Tvg_Paint* paint, PIXEL_TYPE *data, uint32_t w, uint32_t h, Tvg_Colorspace cs, bool copy)
 {
     if (!paint) return TVG_RESULT_INVALID_ARGUMENT;
-    return (Tvg_Result) reinterpret_cast<Picture*>(paint)->load(data, w, h, copy);
+    return (Tvg_Result) reinterpret_cast<Picture*>(paint)->load(data, w, h, static_cast<ColorSpace>(cs), copy);
 }
 
 

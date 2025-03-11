@@ -25,6 +25,9 @@
 
 #include <math.h>
 #include <cstdarg>
+#include <algorithm>
+#include <utility>
+
 #include "tvgCommon.h"
 #include "tvgArray.h"
 #include "tvgLock.h"
@@ -33,35 +36,26 @@ namespace tvg
 {
 
 using RenderData = void*;
-using pixel_t = uint32_t;
+using pixel_t = PIXEL_TYPE;
 
 enum RenderUpdateFlag : uint8_t {None = 0, Path = 1, Color = 2, Gradient = 4, Stroke = 8, Transform = 16, Image = 32, GradientStroke = 64, Blend = 128, All = 255};
 enum CompositionFlag : uint8_t {Invalid = 0, Opacity = 1, Blending = 2, Masking = 4, PostProcessing = 8};  //Composition Purpose
 
-//TODO: Move this in public header unifying with SwCanvas::Colorspace
-enum ColorSpace : uint8_t
-{
-    ABGR8888 = 0,      //The channels are joined in the order: alpha, blue, green, red. Colors are alpha-premultiplied.
-    ARGB8888,          //The channels are joined in the order: alpha, red, green, blue. Colors are alpha-premultiplied.
-    ABGR8888S,         //The channels are joined in the order: alpha, blue, green, red. Colors are un-alpha-premultiplied.
-    ARGB8888S,         //The channels are joined in the order: alpha, red, green, blue. Colors are un-alpha-premultiplied.
-    Grayscale8,        //One single channel data.
-    Unsupported        //TODO: Change to the default, At the moment, we put it in the last to align with SwCanvas::Colorspace.
-};
+
 
 struct RenderSurface
 {
     union {
-        pixel_t* data = nullptr;    //system based data pointer
-        uint32_t* buf32;            //for explicit 32bits channels
-        uint8_t*  buf8;             //for explicit 8bits grayscale
+        void* data = nullptr;    //system based data pointer
+        pixel_t* pixel_buffer;         //for explicit 16/32bits channels
+        uint8_t* buf8;         //for explicit 8bits channels
     };
-    Key key;                        //a reserved lock for the thread safety
-    uint32_t stride = 0;
+    Key key;                     //a reserved lock for the thread safety
+    uint32_t stride_pixels = 0;
     uint32_t w = 0, h = 0;
     ColorSpace cs = ColorSpace::Unsupported;
     uint8_t channelSize = 0;
-    bool premultiplied = false;         //Alpha-premultiplied
+    bool premultiplied = false;  //Alpha-premultiplied
 
     RenderSurface()
     {
@@ -70,7 +64,7 @@ struct RenderSurface
     RenderSurface(const RenderSurface* rhs)
     {
         data = rhs->data;
-        stride = rhs->stride;
+        stride_pixels = rhs->stride_pixels;
         w = rhs->w;
         h = rhs->h;
         cs = rhs->cs;
@@ -443,11 +437,17 @@ static inline bool MASK_REGION_MERGING(CompositeMethod method)
 static inline uint8_t CHANNEL_SIZE(ColorSpace cs)
 {
     switch(cs) {
+#if PIXEL_TYPE_SIZE == 4
         case ColorSpace::ABGR8888:
         case ColorSpace::ABGR8888S:
         case ColorSpace::ARGB8888:
         case ColorSpace::ARGB8888S:
             return sizeof(uint32_t);
+#elif PIXEL_TYPE_SIZE == 2
+        case ColorSpace::RGB565:
+            return sizeof(uint16_t);
+#elif PIXEL_TYPE_SIZE == 1
+#endif
         case ColorSpace::Grayscale8:
             return sizeof(uint8_t);
         case ColorSpace::Unsupported:
