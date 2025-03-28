@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 - 2025 the ThorVG project. All rights reserved.
+ * Copyright (c) 2020 - 2024 the ThorVG project. All rights reserved.
 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,21 +20,27 @@
  * SOFTWARE.
  */
 
-#ifndef _TVG_RAW_LOADER_H_
-#define _TVG_RAW_LOADER_H_
 
-class RawLoader : public ImageLoader
+#include "thorvg.h"
+
+#include "tvgSwCommon.h"
+
+template<typename PIXEL_T>
+bool SwRenderer::target(PIXEL_T* data, uint32_t stride_pixels, uint32_t w, uint32_t h, ColorSpace cs)
 {
-public:
-    bool copy = false;
+    if (!data || stride_pixels == 0 || w == 0 || h == 0 || w > stride_pixels) return false;
 
-    RawLoader();
-    ~RawLoader();
+    clearCompositors();
 
-    using LoadModule::open;
-    bool open(const PIXEL_TYPE* data, uint32_t w, uint32_t h, ColorSpace cs, bool copy);
-    bool read() override;
-};
+    if (!surface) surface = new SwSurface<PIXEL_T>;
 
+    surface->data = data;
+    surface->stride_pixels = stride_pixels;
+    surface->w = w;
+    surface->h = h;
+    surface->cs = cs;
+    surface->channelSize = CHANNEL_SIZE(cs);
+    surface->premultiplied = true;
 
-#endif //_TVG_RAW_LOADER_H_
+    return rasterCompositor(surface);
+}

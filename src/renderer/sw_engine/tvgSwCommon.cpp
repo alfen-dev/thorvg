@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 - 2025 the ThorVG project. All rights reserved.
+ * Copyright (c) 2020 - 2024 the ThorVG project. All rights reserved.
 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,21 +20,9 @@
  * SOFTWARE.
  */
 
-#ifndef _TVG_RAW_LOADER_H_
-#define _TVG_RAW_LOADER_H_
-
-class RawLoader : public ImageLoader
-{
-public:
-    bool copy = false;
-
-    RawLoader();
-    ~RawLoader();
-
-    using LoadModule::open;
-    bool open(const PIXEL_TYPE* data, uint32_t w, uint32_t h, ColorSpace cs, bool copy);
-    bool read() override;
-};
+#include "tvgSwCommon.h"
+#include "tvgMath.h"
+#include "tvgRender.h"
+#include "lv_assert.h"
 
 
-#endif //_TVG_RAW_LOADER_H_
