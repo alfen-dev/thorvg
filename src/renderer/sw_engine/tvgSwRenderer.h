@@ -56,7 +56,7 @@ public:
     bool clear(uint32_t colorWithOpacity) override;
     bool sync() override;
     template<typename PIXEL_T>
-    bool target(PIXEL_T* data, uint32_t stride, uint32_t w, uint32_t h, ColorSpace cs);
+    bool target(PIXEL_T* data, uint32_t x, uint32_t y, uint32_t stride, uint32_t w, uint32_t h, ColorSpace cs);
 
     RenderCompositor* target(const RenderRegion& region, ColorSpace cs, CompositionFlag flags) override;
     bool beginComposite(RenderCompositor* cmp, MaskMethod method, uint8_t opacity) override;
