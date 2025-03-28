@@ -45,10 +45,10 @@ Result Canvas::push(Paint* target, Paint* at) noexcept
 }
 
 
-Result Canvas::draw(bool clear, PIXEL_TYPE color) noexcept
+Result Canvas::draw(bool clear, uint32_t colorWithOpacity) noexcept
 {
     TVGLOG_RENDERER("Draw S. -------------------------------- Canvas(%p)", this);
-    auto ret = pImpl->draw(clear);
+    auto ret = pImpl->draw(clear, colorWithOpacity);
     TVGLOG_RENDERER("Draw E. -------------------------------- Canvas(%p)", this);
 
     return ret;
