@@ -1695,7 +1695,7 @@ bool rasterCompositor(SwSurface<PIXEL_TYPE>* surface)
 }
 
 
-bool rasterClear(SwSurface<PIXEL_TYPE>* surface, uint32_t x, uint32_t y, uint32_t w, uint32_t h, PIXEL_TYPE val)
+bool rasterClear(SwSurface<PIXEL_TYPE>* surface, uint32_t x, uint32_t y, uint32_t w, uint32_t h, PIXEL_TYPE color)
 {
     if (!surface || !surface->pixel_buffer || surface->stride_pixels == 0 || surface->w == 0 || surface->h == 0) return false;
 
@@ -1703,11 +1703,11 @@ bool rasterClear(SwSurface<PIXEL_TYPE>* surface, uint32_t x, uint32_t y, uint32_
     if (surface->channelSize != sizeof(uint8_t)) {
         //full clear
         if (w == surface->stride_pixels) {
-            rasterPixel(surface->pixel_buffer, val, surface->stride_pixels * y, w * h);
+            rasterPixel(surface->pixel_buffer, color, surface->stride_pixels * y, w * h);
         //partial clear
         } else {
             for (uint32_t i = 0; i < h; i++) {
-                rasterPixel(surface->pixel_buffer, val, (surface->stride_pixels * y + x) + (surface->stride_pixels * i), w);
+                rasterPixel(surface->pixel_buffer, color, (surface->stride_pixels * y + x) + (surface->stride_pixels * i), w);
             }
         }
     }
@@ -1715,11 +1715,11 @@ bool rasterClear(SwSurface<PIXEL_TYPE>* surface, uint32_t x, uint32_t y, uint32_
     else {
         //full clear
         if (w == surface->stride_pixels) {
-            rasterGrayscale8(surface->buf8, 0x00, surface->stride_pixels * y, w * h);
+            rasterGrayscale8(surface->buf8, color, surface->stride_pixels * y, w * h);
         //partial clear
         } else {
             for (uint32_t i = 0; i < h; i++) {
-                rasterGrayscale8(surface->buf8, 0x00, (surface->stride_pixels * y + x) + (surface->stride_pixels * i), w);
+                rasterGrayscale8(surface->buf8, color, (surface->stride_pixels * y + x) + (surface->stride_pixels * i), w);
             }
         }
     }
@@ -1899,4 +1899,19 @@ bool rasterConvertCS(RenderSurface* surface, ColorSpace to)
     }
 #endif        
     return false;
+}
+
+
+void color32_to_color(uint32_t srcColor, uint32_t* dstColor)
+{
+    *dstColor = srcColor;
+}
+
+void color32_to_color(uint32_t srcColor, uint16_t* dstColor)
+{
+    uint8_t a = A(srcColor);
+    uint8_t r = C1(srcColor);
+    uint8_t g = C2(srcColor);
+    uint8_t b = C3(srcColor);
+    *dstColor = JOIN<uint16_t>(a, (uint8_t)r, (uint8_t)g, (uint8_t)b);
 }

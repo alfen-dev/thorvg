@@ -108,10 +108,10 @@ struct Canvas::Impl
         return Result::Success;
     }
 
-    Result draw()
+    Result draw(uint32_t color)
     {
         if (status == Status::Damaged) update(nullptr, false);
-        if (status == Status::Drawing || paints.empty() || !renderer->preRender()) return Result::InsufficientCondition;
+        if (status == Status::Drawing || paints.empty() || !renderer->preRender(color)) return Result::InsufficientCondition;
 
         bool rendered = false;
         for (auto paint : paints) {

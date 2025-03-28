@@ -79,12 +79,12 @@ TEST_CASE("Canvas draw", "[capiSwCanvas]")
     Tvg_Canvas* canvas = tvg_swcanvas_create();
     REQUIRE(canvas);
 
-    REQUIRE(tvg_canvas_draw(canvas) == TVG_RESULT_INSUFFICIENT_CONDITION);
+    REQUIRE(tvg_canvas_draw(canvas, 0) == TVG_RESULT_INSUFFICIENT_CONDITION);
     REQUIRE(tvg_canvas_sync(canvas) == TVG_RESULT_INSUFFICIENT_CONDITION);
 
     REQUIRE(tvg_swcanvas_set_target(canvas, buffer, 200, 200, 200, TVG_COLORSPACE_ARGB8888) == TVG_RESULT_SUCCESS);
 
-    REQUIRE(tvg_canvas_draw(canvas) == TVG_RESULT_INSUFFICIENT_CONDITION);
+    REQUIRE(tvg_canvas_draw(canvas, 0) == TVG_RESULT_INSUFFICIENT_CONDITION);
     REQUIRE(tvg_canvas_sync(canvas) == TVG_RESULT_INSUFFICIENT_CONDITION);
 
     Tvg_Paint* paint = tvg_shape_new();
@@ -92,7 +92,7 @@ TEST_CASE("Canvas draw", "[capiSwCanvas]")
 
     REQUIRE(tvg_canvas_push(canvas, paint) == TVG_RESULT_SUCCESS);
 
-    REQUIRE(tvg_canvas_draw(canvas) == TVG_RESULT_SUCCESS);
+    REQUIRE(tvg_canvas_draw(canvas, 0) == TVG_RESULT_SUCCESS);
     REQUIRE(tvg_canvas_sync(canvas) == TVG_RESULT_SUCCESS);
     REQUIRE(tvg_canvas_clear(canvas, true) == TVG_RESULT_SUCCESS);
 
@@ -104,7 +104,7 @@ TEST_CASE("Canvas draw", "[capiSwCanvas]")
 
     REQUIRE(tvg_canvas_push(canvas, paint2) == TVG_RESULT_SUCCESS);
 
-    REQUIRE(tvg_canvas_draw(canvas) == TVG_RESULT_SUCCESS);
+    REQUIRE(tvg_canvas_draw(canvas, 0) == TVG_RESULT_SUCCESS);
     REQUIRE(tvg_canvas_sync(canvas) == TVG_RESULT_SUCCESS);
 
     REQUIRE(tvg_canvas_destroy(canvas) == TVG_RESULT_SUCCESS);

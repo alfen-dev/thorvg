@@ -66,7 +66,7 @@ public:
 
     RenderData prepare(const RenderShape& rshape, RenderData data, const Matrix& transform, Array<RenderData>& clips, uint8_t opacity, RenderUpdateFlag flags, bool clipper) override;
     RenderData prepare(RenderSurface* surface, RenderData data, const Matrix& transform, Array<RenderData>& clips, uint8_t opacity, RenderUpdateFlag flags) override;
-    bool preRender() override;
+    bool preRender(uint32_t color = 0) override;
     bool renderShape(RenderData data) override;
     bool renderImage(RenderData data) override;
     bool postRender() override;

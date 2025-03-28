@@ -997,7 +997,7 @@ RenderRegion GlRenderer::region(RenderData data)
 }
 
 
-bool GlRenderer::preRender()
+bool GlRenderer::preRender(uint32_t color)
 {
     if (mPrograms.size() == 0)
     {

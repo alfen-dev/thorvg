@@ -28,14 +28,6 @@
 //#define PIXEL_TYPE_SIZE 4
 //#define PIXEL_SIZE_SHIFT 2
 
-#if PIXEL_TYPE_SIZE == 4
-//boe ba
-#elif PIXEL_TYPE_SIZE == 2
-//bla bla
-#else
-//bla boe
-#endif    
-
 #include "lvgl/src/misc/lv_assert.h"
 #define RAPIDJSON_ASSERT(x) LV_ASSERT(x)
 #define TVG_ASSERT(x) LV_ASSERT(x)

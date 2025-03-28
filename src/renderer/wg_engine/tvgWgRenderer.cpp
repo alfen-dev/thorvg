@@ -145,7 +145,7 @@ RenderData WgRenderer::prepare(RenderSurface* surface, RenderData data, const Ma
     return renderDataPicture;
 }
 
-bool WgRenderer::preRender()
+bool WgRenderer::preRender(uint32_t color)
 {
     // push rot render storage to the render tree stack
     assert(mRenderStorageStack.count == 0);

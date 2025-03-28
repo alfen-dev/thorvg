@@ -61,10 +61,10 @@ Result Canvas::clear(bool free) noexcept
 }
 
 
-Result Canvas::draw() noexcept
+Result Canvas::draw(uint32_t colorWithOpacity) noexcept
 {
     TVGLOG_RENDERER("Draw S. -------------------------------- Canvas(%p)", this);
-    auto ret = pImpl->draw(color);
+    auto ret = pImpl->draw(colorWithOpacity);
     TVGLOG_RENDERER("Draw E. -------------------------------- Canvas(%p)", this);
 
     return ret;

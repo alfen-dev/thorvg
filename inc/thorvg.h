@@ -676,7 +676,7 @@ public:
      * @note Drawing can be asynchronous if the assigned thread number is greater than zero. To guarantee the drawing is done, call sync() afterwards.
      * @see Canvas::sync()
      */
-    virtual Result draw() noexcept;
+    virtual Result draw(uint32_t color) noexcept;
 
     /**
      * @brief Sets the drawing region in the canvas.

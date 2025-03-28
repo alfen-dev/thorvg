@@ -345,7 +345,7 @@ int main(int argc, char **argv)
 
         //Draw the canvas
         tvg_canvas_update(canvas);
-        tvg_canvas_draw(canvas);
+        tvg_canvas_draw(canvas, 0);
         tvg_canvas_sync(canvas);
 
         SDL_UpdateWindowSurface(window);

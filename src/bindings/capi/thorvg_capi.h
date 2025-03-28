@@ -754,7 +754,10 @@ TVG_API Tvg_Result tvg_canvas_update_paint(Tvg_Canvas* canvas, Tvg_Paint* paint)
 * \note Drawing can be asynchronous based on the assigned thread number. To guarantee the drawing is done, call tvg_canvas_sync() afterwards.
 * \see tvg_canvas_sync()
 */
-TVG_API Tvg_Result tvg_canvas_draw(Tvg_Canvas* canvas);
+// For 32 bit colors the value 0x00000000 as set by rasterClear is transparent
+// Incase of 16 bit color 0x0000 is black. 
+// Therefor a (none black) background color can be specified:
+TVG_API Tvg_Result tvg_canvas_draw(Tvg_Canvas* canvas, uint32_t colorWithOpacity);
 
 
 /*!
