@@ -53,7 +53,7 @@ public:
     ColorSpace colorSpace() override;
     const RenderSurface* mainSurface() override;
 
-    bool clear(PIXEL_TYPE color) override;
+    bool clear(uint32_t colorWithOpacity) override;
     bool sync() override;
     template<typename PIXEL_T>
     bool target(PIXEL_T* data, uint32_t stride, uint32_t w, uint32_t h, ColorSpace cs);

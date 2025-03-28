@@ -147,10 +147,10 @@ TVG_API Tvg_Result tvg_canvas_update_paint(Tvg_Canvas* canvas, Tvg_Paint* paint)
 }
 
 
-TVG_API Tvg_Result tvg_canvas_draw(Tvg_Canvas* canvas, bool clear, PIXEL_TYPE color)
+TVG_API Tvg_Result tvg_canvas_draw(Tvg_Canvas* canvas, bool clear, uint32_t colorWithOpacity)
 {
     if (!canvas) return TVG_RESULT_INVALID_ARGUMENT;
-    return (Tvg_Result) reinterpret_cast<Canvas*>(canvas)->draw(clear, color);
+    return (Tvg_Result) reinterpret_cast<Canvas*>(canvas)->draw(clear, colorWithOpacity);
 }
 
 

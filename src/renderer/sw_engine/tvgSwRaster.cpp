@@ -151,16 +151,12 @@ static inline uint32_t _abgrJoin(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 }
 
 
-static inline uint32_t _argbJoin(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
-{
-    return (a << 24 | r << 16 | g << 8 | b);
-}
-
 static inline uint16_t _argb16Join(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
     //return (a << 24 | r << 16 | g << 8 | b);
     return (((uint16_t)(r & 0b11111000)) << 8) | (((uint16_t)(g & 0b11111100)) << 3) | (((uint16_t)b) >> 3);
 }
+
 
 static inline bool _blending(const SwSurface<PIXEL_TYPE>* surface)
 {
@@ -1926,4 +1922,18 @@ void rasterXYFlip(uint32_t* src, uint32_t* dst, int32_t stride, int32_t w, int32
             }
         }
     }
+}
+
+void color32_to_color(uint32_t srcColor, uint32_t* dstColor)
+{
+    *dstColor = srcColor;
+}
+
+void color32_to_color(uint32_t srcColor, uint16_t* dstColor)
+{
+    uint8_t a = A(srcColor);
+    uint8_t r = C1(srcColor);
+    uint8_t g = C2(srcColor);
+    uint8_t b = C3(srcColor);
+    *dstColor = JOIN<uint16_t>(a, (uint8_t)r, (uint8_t)g, (uint8_t)b);
 }
