@@ -79,7 +79,7 @@ TEST_CASE("Scene reusing paints", "[capiScene]")
     uint32_t* buffer = (uint32_t*) malloc(sizeof(uint32_t) * 200 * 200);
     REQUIRE(buffer);
 
-    REQUIRE(tvg_swcanvas_set_target(canvas, buffer, 200, 200, 200, TVG_COLORSPACE_ARGB8888) == TVG_RESULT_SUCCESS);
+    REQUIRE(tvg_swcanvas_set_target(canvas, buffer, 0, 0, 200, 200, 200, TVG_COLORSPACE_ARGB8888) == TVG_RESULT_SUCCESS);
 
     Tvg_Paint* scene = tvg_scene_new();
     REQUIRE(scene);

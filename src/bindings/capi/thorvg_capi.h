@@ -503,7 +503,7 @@ TVG_API Tvg_Canvas* tvg_swcanvas_create(void);
 *
 * \see Tvg_Colorspace
 */
-TVG_API Tvg_Result tvg_swcanvas_set_target(Tvg_Canvas* canvas, PIXEL_TYPE* buffer, uint32_t stride_pixels, uint32_t w, uint32_t h, Tvg_Colorspace cs);
+TVG_API Tvg_Result tvg_swcanvas_set_target(Tvg_Canvas* canvas, PIXEL_TYPE* buffer, uint32_t x, uint32_t y, uint32_t stride_pixels, uint32_t w, uint32_t h, Tvg_Colorspace cs);
 
 
 /*!

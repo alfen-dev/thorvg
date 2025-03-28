@@ -1685,7 +1685,7 @@ public:
      * @see Canvas::sync()
     */
    template<typename PIXEL_T>
-   Result target(PIXEL_T* buffer, uint32_t stride_pixels, uint32_t w, uint32_t h, ColorSpace cs) noexcept;
+   Result target(PIXEL_T* buffer, int32_t x, int32_t y, uint32_t stride_pixels, uint32_t w, uint32_t h, ColorSpace cs) noexcept;
 
     /**
      * @brief Set sw engine memory pool behavior policy.

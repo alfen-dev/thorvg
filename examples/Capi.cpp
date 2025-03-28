@@ -305,7 +305,7 @@ int main(int argc, char **argv)
 
     //create the canvas
     canvas = tvg_swcanvas_create();
-    tvg_swcanvas_set_target(canvas, (uint32_t*)surface->pixels, surface->w, surface->pitch / 4, surface->h, TVG_COLORSPACE_ARGB8888);
+    tvg_swcanvas_set_target(canvas, (uint32_t*)surface->pixels, 0, 0, surface->pitch / 4, surface->w, surface->h, TVG_COLORSPACE_ARGB8888);
     tvg_swcanvas_set_mempool(canvas, TVG_MEMPOOL_POLICY_DEFAULT);
 
     contents();

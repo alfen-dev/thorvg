@@ -58,7 +58,7 @@ TEST_CASE("Canvas initialization", "[capiSwCanvas]")
     Tvg_Canvas* canvas = tvg_swcanvas_create();
     REQUIRE(canvas);
 
-    REQUIRE(tvg_swcanvas_set_target(canvas, buffer, 200, 200, 200, TVG_COLORSPACE_ARGB8888) == TVG_RESULT_SUCCESS);
+    REQUIRE(tvg_swcanvas_set_target(canvas, buffer, 0, 0, 200, 200, 200, TVG_COLORSPACE_ARGB8888) == TVG_RESULT_SUCCESS);
 
     REQUIRE(tvg_swcanvas_set_mempool(canvas, TVG_MEMPOOL_POLICY_DEFAULT) == TVG_RESULT_SUCCESS);
 
@@ -82,7 +82,7 @@ TEST_CASE("Canvas draw", "[capiSwCanvas]")
     REQUIRE(tvg_canvas_draw(canvas, 0) == TVG_RESULT_INSUFFICIENT_CONDITION);
     REQUIRE(tvg_canvas_sync(canvas) == TVG_RESULT_INSUFFICIENT_CONDITION);
 
-    REQUIRE(tvg_swcanvas_set_target(canvas, buffer, 200, 200, 200, TVG_COLORSPACE_ARGB8888) == TVG_RESULT_SUCCESS);
+    REQUIRE(tvg_swcanvas_set_target(canvas, buffer, 0, 0, 200, 200, 200, TVG_COLORSPACE_ARGB8888) == TVG_RESULT_SUCCESS);
 
     REQUIRE(tvg_canvas_draw(canvas, 0) == TVG_RESULT_INSUFFICIENT_CONDITION);
     REQUIRE(tvg_canvas_sync(canvas) == TVG_RESULT_INSUFFICIENT_CONDITION);

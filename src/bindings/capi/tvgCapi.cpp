@@ -87,10 +87,10 @@ TVG_API Tvg_Result tvg_swcanvas_set_mempool(Tvg_Canvas* canvas, Tvg_Mempool_Poli
 }
 
 
-TVG_API Tvg_Result tvg_swcanvas_set_target(Tvg_Canvas* canvas, PIXEL_TYPE* buffer, uint32_t stride_pixels, uint32_t w, uint32_t h, Tvg_Colorspace cs)
+TVG_API Tvg_Result tvg_swcanvas_set_target(Tvg_Canvas* canvas, PIXEL_TYPE* buffer, uint32_t x, uint32_t y, uint32_t stride_pixels, uint32_t w, uint32_t h, Tvg_Colorspace cs)
 {
     if (!canvas) return TVG_RESULT_INVALID_ARGUMENT;
-    return (Tvg_Result) reinterpret_cast<SwCanvas*>(canvas)->target(buffer, stride_pixels, w, h, static_cast<ColorSpace>(cs));
+    return (Tvg_Result) reinterpret_cast<SwCanvas*>(canvas)->target(buffer, x, y, stride_pixels, w, h, static_cast<ColorSpace>(cs));
 }
 
 

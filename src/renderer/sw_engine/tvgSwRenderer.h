@@ -54,7 +54,7 @@ public:
     bool clear() override;
     bool sync() override;
     template<typename PIXEL_T>
-    bool target(PIXEL_T* data, uint32_t stride, uint32_t w, uint32_t h, ColorSpace cs);
+    bool target(PIXEL_T* data, uint32_t x, uint32_t y, uint32_t stride, uint32_t w, uint32_t h, ColorSpace cs);
     bool mempool(bool shared);
 
     RenderCompositor* target(const RenderRegion& region, ColorSpace cs, CompositionFlag flags) override;

@@ -52,6 +52,7 @@ struct RenderSurface
     };
     Key key;                     //a reserved lock for the thread safety
     uint32_t stride_pixels = 0;
+    uint32_t x = 0, y = 0;
     uint32_t w = 0, h = 0;
     ColorSpace cs = ColorSpace::Unsupported;
     uint8_t channelSize = 0;
@@ -65,6 +66,8 @@ struct RenderSurface
     {
         data = rhs->data;
         stride_pixels = rhs->stride_pixels;
+        x = rhs->x;
+        y = rhs->y;
         w = rhs->w;
         h = rhs->h;
         cs = rhs->cs;
