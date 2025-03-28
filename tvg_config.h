@@ -41,6 +41,10 @@
 #define TVG_ASSERT(x) LV_ASSERT(x)
 #define TVG_ASSERT_NULL(x) LV_ASSERT_NULL(x)
 
+
+
+#if 1
+
 #ifdef __cplusplus
 #include <cstring>
 extern "C" {
@@ -55,3 +59,17 @@ int SEGGER_RTT_printf(unsigned BufferIndex, const char * sFormat, ...);
 #define FILENAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #define TVGERR(tag, fmt, ...) SEGGER_RTT_printf(0, "%20s %4u TVG Err %s: " fmt "\n", FILENAME, __LINE__, tag, ##__VA_ARGS__)
 #define TVGLOG(tag, fmt, ...) SEGGER_RTT_printf(0, "%20s %4u TVG Inf %s: " fmt "\n", FILENAME, __LINE__, tag, ##__VA_ARGS__)
+
+#else 
+
+#define TVGERR(tag, fmt, ...) do {} while(0)
+#define TVGLOG(tag, fmt, ...) do {} while(0)
+
+#endif
+
+
+#if 0
+#define TVGLOG_RENDERER(fmt, ...) TVGLOG("RENDERER", fmt, ##__VA_ARGS__)
+#else
+#define TVGLOG_RENDERER(fmt, ...) do {} while(0)
+#endif
