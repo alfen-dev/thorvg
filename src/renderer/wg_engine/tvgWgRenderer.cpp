@@ -305,7 +305,7 @@ const RenderSurface* WgRenderer::mainSurface()
 }
 
 
-bool WgRenderer::clear()
+bool WgRenderer::clear(PIXEL_TYPE color)
 {
     //TODO: clear the current target buffer only if clear() is called
     return true;

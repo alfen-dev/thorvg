@@ -84,11 +84,11 @@ struct Canvas::Impl
         return Result::Success;
     }
 
-    Result draw(bool clear)
+    Result draw(bool clear, PIXEL_TYPE color)
     {
         if (status == Status::Drawing) return Result::InsufficientCondition;
 
-        if (clear && !renderer->clear()) return Result::InsufficientCondition;
+        if (clear && !renderer->clear(color)) return Result::InsufficientCondition;
 
         if (scene->paints().empty()) return Result::InsufficientCondition;
 
