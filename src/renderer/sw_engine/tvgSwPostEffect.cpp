@@ -172,7 +172,7 @@ void effectGaussianBlurUpdate(RenderEffectGaussianBlur* params, const Matrix& tr
 }
 
 
-bool effectGaussianBlur(SwCompositor* cmp, SwSurface<PIXEL_TYPE>* surface, const RenderEffectGaussianBlur* params)
+bool effectGaussianBlur(SwCompositor* cmp, SwSurface<PixelType>* surface, const RenderEffectGaussianBlur* params)
 {
     auto& buffer = surface->compositor->image;
     auto data = static_cast<SwGaussianBlur*>(params->rd);
@@ -180,8 +180,8 @@ bool effectGaussianBlur(SwCompositor* cmp, SwSurface<PIXEL_TYPE>* surface, const
     auto w = (bbox.max.x - bbox.min.x);
     auto h = (bbox.max.y - bbox.min.y);
     auto stride_pixels = cmp->image.stride_pixels;
-    auto front = cmp->image.pixel_buffer;
-    auto back = buffer.pixel_buffer;
+    auto front = cmp->image.pixelBuffer;
+    auto back = buffer.pixelBuffer;
     auto swapped = false;
 
     TVGLOG("SW_ENGINE", "GaussianFilter region(%ld, %ld, %ld, %ld) params(%f %d %d), level(%d)", bbox.min.x, bbox.min.y, bbox.max.x, bbox.max.y, params->sigma, params->direction, params->border, data->level);
@@ -201,7 +201,7 @@ bool effectGaussianBlur(SwCompositor* cmp, SwSurface<PIXEL_TYPE>* surface, const
 
     //vertical. x/y flipping and horionztal access is pretty compatible with the memory architecture.
     if (params->direction != 1) {
-        rasterXYFlip<PIXEL_TYPE>(front, back, stride_pixels, w, h, bbox, false);
+        rasterXYFlip<PixelType>(front, back, stride_pixels, w, h, bbox, false);
         std::swap(front, back);
 
         for (int i = 0; i < data->level; ++i) {
@@ -210,11 +210,11 @@ bool effectGaussianBlur(SwCompositor* cmp, SwSurface<PIXEL_TYPE>* surface, const
             swapped = !swapped;
         }
 
-        rasterXYFlip<PIXEL_TYPE>(front, back, stride_pixels, h, w, bbox, true);
+        rasterXYFlip<PixelType>(front, back, stride_pixels, h, w, bbox, true);
         std::swap(front, back);
     }
 
-    if (swapped) std::swap(cmp->image.pixel_buffer, buffer.pixel_buffer);
+    if (swapped) std::swap(cmp->image.pixelBuffer, buffer.pixelBuffer);
 
     return true;
 }
@@ -345,7 +345,7 @@ void effectDropShadowUpdate(RenderEffectDropShadow* params, const Matrix& transf
 //A quite same integration with effectGaussianBlur(). See it for detailed comments.
 //surface[0]: the original image, to overlay it into the filtered image.
 //surface[1]: temporary buffer for generating the filtered image.
-bool effectDropShadow(SwCompositor* cmp, SwSurface<PIXEL_TYPE>* surface[2], const RenderEffectDropShadow* params, bool direct)
+bool effectDropShadow(SwCompositor* cmp, SwSurface<PixelType>* surface[2], const RenderEffectDropShadow* params, bool direct)
 {
     //FIXME: if the body is partially visible due to clipping, the shadow also becomes partially visible.
 
@@ -360,21 +360,21 @@ bool effectDropShadow(SwCompositor* cmp, SwSurface<PIXEL_TYPE>* surface[2], cons
     SwImage* buffer[] = {&surface[0]->compositor->image, &surface[1]->compositor->image};
     auto color = cmp->recoverSfc->join(params->color[0], params->color[1], params->color[2], 255);
     auto stride_pixels = cmp->image.stride_pixels;
-    auto front = cmp->image.pixel_buffer;
-    auto back = buffer[1]->pixel_buffer;
+    auto front = cmp->image.pixelBuffer;
+    auto back = buffer[1]->pixelBuffer;
 
     auto opacity = direct ? MULTIPLY(params->color[3], cmp->opacity) : params->color[3];
 
     TVGLOG("SW_ENGINE", "DropShadow region(%ld, %ld, %ld, %ld) params(%f %f %f), level(%d)", bbox.min.x, bbox.min.y, bbox.max.x, bbox.max.y, params->angle, params->distance, params->sigma, data->level);
 
     //saving the original image in order to overlay it into the filtered image.
-    _dropShadowFilter<PIXEL_TYPE>(back, front, stride_pixels, w, h, bbox, data->kernel[0], color, false);
-    std::swap(front, buffer[0]->pixel_buffer);
+    _dropShadowFilter<PixelType>(back, front, stride_pixels, w, h, bbox, data->kernel[0], color, false);
+    std::swap(front, buffer[0]->pixelBuffer);
     std::swap(front, back);
 
     //horizontal
     for (int i = 1; i < data->level; ++i) {
-        _dropShadowFilter<PIXEL_TYPE>(back, front, stride_pixels, w, h, bbox, data->kernel[i], color, false);
+        _dropShadowFilter<PixelType>(back, front, stride_pixels, w, h, bbox, data->kernel[i], color, false);
         std::swap(front, back);
     }
 
@@ -383,31 +383,31 @@ bool effectDropShadow(SwCompositor* cmp, SwSurface<PIXEL_TYPE>* surface[2], cons
     std::swap(front, back);
 
     for (int i = 0; i < data->level; ++i) {
-        _dropShadowFilter<PIXEL_TYPE>(back, front, stride_pixels, h, w, bbox, data->kernel[i], color, true);
+        _dropShadowFilter<PixelType>(back, front, stride_pixels, h, w, bbox, data->kernel[i], color, true);
         std::swap(front, back);
     }
 
     rasterXYFlip(front, back, stride_pixels, h, w, bbox, true);
-    std::swap(cmp->image.pixel_buffer, back);
+    std::swap(cmp->image.pixelBuffer, back);
 
     //draw to the main surface directly
     if (direct) {
-        _dropShadowShift(cmp->recoverSfc->pixel_buffer, cmp->image.pixel_buffer, cmp->recoverSfc->stride_pixels, stride_pixels, bbox, data->offset, opacity, direct);
-        std::swap(cmp->image.pixel_buffer, buffer[0]->pixel_buffer);
+        _dropShadowShift(cmp->recoverSfc->pixelBuffer, cmp->image.pixelBuffer, cmp->recoverSfc->stride_pixels, stride_pixels, bbox, data->offset, opacity, direct);
+        std::swap(cmp->image.pixelBuffer, buffer[0]->pixelBuffer);
         return true;
     }
 
     //draw to the intermediate surface
     rasterClear(surface[1], bbox.min.x, bbox.min.y, w, h);
-    _dropShadowShift(buffer[1]->pixel_buffer, cmp->image.pixel_buffer, stride_pixels, stride_pixels, bbox, data->offset, opacity, direct);
-    std::swap(cmp->image.pixel_buffer, buffer[1]->pixel_buffer);
+    _dropShadowShift(buffer[1]->pixelBuffer, cmp->image.pixelBuffer, stride_pixels, stride_pixels, bbox, data->offset, opacity, direct);
+    std::swap(cmp->image.pixelBuffer, buffer[1]->pixelBuffer);
 
     //compositing shadow and body
-    auto s = buffer[0]->pixel_buffer + (bbox.min.y * buffer[0]->stride_pixels + bbox.min.x);
-    auto d = cmp->image.pixel_buffer + (bbox.min.y * cmp->image.stride_pixels + bbox.min.x);
+    auto s = buffer[0]->pixelBuffer + (bbox.min.y * buffer[0]->stride_pixels + bbox.min.x);
+    auto d = cmp->image.pixelBuffer + (bbox.min.y * cmp->image.stride_pixels + bbox.min.x);
 
     for (auto y = 0; y < h; ++y) {
-        rasterTranslucentPixel<PIXEL_TYPE>(d, s, w, 255);
+        rasterTranslucentPixel<PixelType>(d, s, w, 255);
         s += buffer[0]->stride_pixels;
         d += cmp->image.stride_pixels;
     }
@@ -438,8 +438,8 @@ bool effectFill(SwCompositor* cmp, const RenderEffectFill* params, bool direct)
     TVGLOG("SW_ENGINE", "Fill region(%ld, %ld, %ld, %ld), param(%d %d %d %d)", bbox.min.x, bbox.min.y, bbox.max.x, bbox.max.y, params->color[0], params->color[1], params->color[2], params->color[3]);
 
     if (direct) {
-        auto dbuffer = cmp->recoverSfc->pixel_buffer + (bbox.min.y * cmp->recoverSfc->stride_pixels + bbox.min.x);
-        auto sbuffer = cmp->image.pixel_buffer + (bbox.min.y * cmp->image.stride_pixels + bbox.min.x);
+        auto dbuffer = cmp->recoverSfc->pixelBuffer + (bbox.min.y * cmp->recoverSfc->stride_pixels + bbox.min.x);
+        auto sbuffer = cmp->image.pixelBuffer + (bbox.min.y * cmp->image.stride_pixels + bbox.min.x);
         for (size_t y = 0; y < h; ++y) {
             auto dst = dbuffer;
             auto src = sbuffer;
@@ -453,7 +453,7 @@ bool effectFill(SwCompositor* cmp, const RenderEffectFill* params, bool direct)
         }
         cmp->valid = true;  //no need the subsequent composition
     } else {
-        auto dbuffer = cmp->image.pixel_buffer + (bbox.min.y * cmp->image.stride_pixels + bbox.min.x);
+        auto dbuffer = cmp->image.pixelBuffer + (bbox.min.y * cmp->image.stride_pixels + bbox.min.x);
         for (size_t y = 0; y < h; ++y) {
             auto dst = dbuffer;
             for (size_t x = 0; x < w; ++x, ++dst) {
@@ -481,8 +481,8 @@ bool effectTint(SwCompositor* cmp, const RenderEffectTint* params, bool direct)
     auto& bbox = cmp->bbox;
     auto w = size_t(bbox.max.x - bbox.min.x);
     auto h = size_t(bbox.max.y - bbox.min.y);
-    PIXEL_TYPE black = cmp->recoverSfc->join(params->black[0], params->black[1], params->black[2], 255);
-    PIXEL_TYPE white = cmp->recoverSfc->join(params->white[0], params->white[1], params->white[2], 255);
+    PixelType black = cmp->recoverSfc->join(params->black[0], params->black[1], params->black[2], 255);
+    PixelType white = cmp->recoverSfc->join(params->white[0], params->white[1], params->white[2], 255);
     auto opacity = cmp->opacity;
     auto luma = cmp->recoverSfc->alphas[2];  //luma function
 
@@ -491,13 +491,13 @@ bool effectTint(SwCompositor* cmp, const RenderEffectTint* params, bool direct)
     /* Tint Formula: (1 - L) * Black + L * White, where the L is Luminance. */
 
     if (direct) {
-        auto dbuffer = cmp->recoverSfc->pixel_buffer + (bbox.min.y * cmp->recoverSfc->stride_pixels + bbox.min.x);
-        auto sbuffer = cmp->image.pixel_buffer + (bbox.min.y * cmp->image.stride_pixels + bbox.min.x);
+        auto dbuffer = cmp->recoverSfc->pixelBuffer + (bbox.min.y * cmp->recoverSfc->stride_pixels + bbox.min.x);
+        auto sbuffer = cmp->image.pixelBuffer + (bbox.min.y * cmp->image.stride_pixels + bbox.min.x);
         for (size_t y = 0; y < h; ++y) {
             auto dst = dbuffer;
             auto src = sbuffer;
             for (size_t x = 0; x < w; ++x, ++dst, ++src) {
-                PIXEL_TYPE tmp = rasterUnpremultiply(*src);
+                PixelType tmp = rasterUnpremultiply(*src);
                 auto val = INTERPOLATE(INTERPOLATE(black, white, luma((uint8_t*)&tmp)), tmp, params->intensity);
                 *dst = INTERPOLATE(val, *dst, MULTIPLY(opacity, A(tmp)));
             }
@@ -506,11 +506,11 @@ bool effectTint(SwCompositor* cmp, const RenderEffectTint* params, bool direct)
         }
         cmp->valid = true;  //no need the subsequent composition
     } else {
-        auto dbuffer = cmp->image.pixel_buffer + (bbox.min.y * cmp->image.stride_pixels + bbox.min.x);
+        auto dbuffer = cmp->image.pixelBuffer + (bbox.min.y * cmp->image.stride_pixels + bbox.min.x);
         for (size_t y = 0; y < h; ++y) {
             auto dst = dbuffer;
             for (size_t x = 0; x < w; ++x, ++dst) {
-                PIXEL_TYPE tmp = rasterUnpremultiply(*dst);
+                PixelType tmp = rasterUnpremultiply(*dst);
                 auto val = INTERPOLATE(INTERPOLATE(black, white, luma((uint8_t*)&tmp)), tmp, params->intensity);
                 *dst = ALPHA_BLEND(val, A(tmp));
             }
@@ -564,8 +564,8 @@ bool effectTritone(SwCompositor* cmp, const RenderEffectTritone* params, bool di
     TVGLOG("SW_ENGINE", "Tritone region(%ld, %ld, %ld, %ld), param(%d %d %d, %d %d %d, %d %d %d)", bbox.min.x, bbox.min.y, bbox.max.x, bbox.max.y, params->shadow[0], params->shadow[1], params->shadow[2], params->midtone[0], params->midtone[1], params->midtone[2], params->highlight[0], params->highlight[1], params->highlight[2]);
 
     if (direct) {
-        auto dbuffer = cmp->recoverSfc->pixel_buffer + (bbox.min.y * cmp->recoverSfc->stride_pixels + bbox.min.x);
-        auto sbuffer = cmp->image.pixel_buffer + (bbox.min.y * cmp->image.stride_pixels + bbox.min.x);
+        auto dbuffer = cmp->recoverSfc->pixelBuffer + (bbox.min.y * cmp->recoverSfc->stride_pixels + bbox.min.x);
+        auto sbuffer = cmp->image.pixelBuffer + (bbox.min.y * cmp->image.stride_pixels + bbox.min.x);
         for (size_t y = 0; y < h; ++y) {
             auto dst = dbuffer;
             auto src = sbuffer;
@@ -578,7 +578,7 @@ bool effectTritone(SwCompositor* cmp, const RenderEffectTritone* params, bool di
         }
         cmp->valid = true;  //no need the subsequent composition
     } else {
-        auto dbuffer = cmp->image.pixel_buffer + (bbox.min.y * cmp->image.stride_pixels + bbox.min.x);
+        auto dbuffer = cmp->image.pixelBuffer + (bbox.min.y * cmp->image.stride_pixels + bbox.min.x);
         for (size_t y = 0; y < h; ++y) {
             auto dst = dbuffer;
             for (size_t x = 0; x < w; ++x, ++dst) {

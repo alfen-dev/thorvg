@@ -783,7 +783,7 @@ void GlRenderer::endRenderPass(RenderCompositor* cmp)
 /* External Class Implementation                                        */
 /************************************************************************/
 
-bool GlRenderer::clear(PIXEL_TYPE color)
+bool GlRenderer::clear(PixelType color)
 {
     mClearBuffer = true;
     return true;

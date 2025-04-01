@@ -381,7 +381,7 @@ LoadModule* LoaderMgr::loader(const char* data, uint32_t size, const char* mimeT
 }
 
 
-LoadModule* LoaderMgr::loader(const PIXEL_TYPE *data, uint32_t w, uint32_t h, ColorSpace cs, bool copy)
+LoadModule* LoaderMgr::loader(const PixelType *data, uint32_t w, uint32_t h, ColorSpace cs, bool copy)
 {
     //Note that users could use the same data pointer with the different content.
     //Thus caching is only valid for shareable.

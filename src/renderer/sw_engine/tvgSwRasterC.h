@@ -116,7 +116,7 @@ static bool inline cRasterTranslucentRle(SwSurface<PIXEL_T>* surface, const SwRl
         PIXEL_T color = surface->join(c.r, c.g, c.b, c.a);
         PIXEL_T src;
         for (uint32_t i = 0; i < rle->size; ++i, ++span) {
-            PIXEL_T* dst = &surface->pixel_buffer[span->y * surface->stride_pixels + span->x];
+            PIXEL_T* dst = &surface->pixelBuffer[span->y * surface->stride_pixels + span->x];
             if (span->coverage < 255) src = ALPHA_BLEND(color, span->coverage);
             else src = color;
             uint8_t ialpha = IA(src);
@@ -142,18 +142,18 @@ static bool inline cRasterTranslucentRle(SwSurface<PIXEL_T>* surface, const SwRl
 }
 
 
-static bool inline cRasterTranslucentRect(SwSurface<PIXEL_TYPE>* surface, const SwBBox& region, const RenderColor& c)
+static bool inline cRasterTranslucentRect(SwSurface<PixelType>* surface, const SwBBox& region, const RenderColor& c)
 {
     auto h = static_cast<uint32_t>(region.max.y - region.min.y);
     auto w = static_cast<uint32_t>(region.max.x - region.min.x);
 
     //16/32bits channels
     if (surface->channelSize != sizeof(uint8_t)) {
-        PIXEL_TYPE color = surface->join(c.r, c.g, c.b, c.a);
-        PIXEL_TYPE* buffer = surface->pixel_buffer + (region.min.y * surface->stride_pixels) + region.min.x;
+        PixelType color = surface->join(c.r, c.g, c.b, c.a);
+        PixelType* buffer = surface->pixelBuffer + (region.min.y * surface->stride_pixels) + region.min.x;
         uint8_t ialpha = 255 - c.a;
         for (uint32_t y = 0; y < h; ++y) {
-            PIXEL_TYPE* dst = &buffer[y * surface->stride_pixels];
+            PixelType* dst = &buffer[y * surface->stride_pixels];
             for (uint32_t x = 0; x < w; ++x, ++dst) {
                 *dst = color + ALPHA_BLEND(*dst, ialpha);
             }
@@ -180,7 +180,7 @@ static bool inline cRasterABGRtoARGB(RenderSurface* surface)
 
     //64bits faster converting
     if (surface->w % 2 == 0) {
-        auto buffer = reinterpret_cast<uint64_t*>(surface->pixel_buffer);
+        auto buffer = reinterpret_cast<uint64_t*>(surface->pixelBuffer);
         for (uint32_t y = 0; y < surface->h; ++y, buffer += surface->stride_pixels / 2) {
             auto dst = buffer;
             for (uint32_t x = 0; x < surface->w / 2; ++x, ++dst) {
@@ -191,7 +191,7 @@ static bool inline cRasterABGRtoARGB(RenderSurface* surface)
         }
     //default converting
     } else {
-        auto buffer = surface->pixel_buffer;
+        auto buffer = surface->pixelBuffer;
         for (uint32_t y = 0; y < surface->h; ++y, buffer += surface->stride_pixels) {
             auto dst = buffer;
             for (uint32_t x = 0; x < surface->w; ++x, ++dst) {
