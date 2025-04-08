@@ -340,7 +340,7 @@ static void _horizLine(RleWorker& rw, SwCoord x, SwCoord y, SwCoord area, SwCoor
     //span pool is full, grow it.
     if (rle->size >= rle->alloc) {
         auto newSize = (rle->size > 0) ? (rle->size * 2) : 256;
-        newSize = rle->size + 128;
+        //newSize = rle->size + 128;
         if (rle->alloc < newSize) {
             rle->alloc = newSize;
             rle->spans = tvg::realloc<SwSpan*>(rle->spans, rle->alloc * sizeof(SwSpan));

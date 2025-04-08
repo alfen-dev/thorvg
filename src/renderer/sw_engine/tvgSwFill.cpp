@@ -145,8 +145,8 @@ void _applyAA<uint16_t>(const SwFill* fill, uint32_t begin, uint32_t end)
     auto dt = 1.0f / (begin + end + 1.0f);
     float t = dt;
     while (i != begin) {
-        auto dist = 255 - static_cast<int32_t>(255 * t);
-        uint16_t color = INTERPOLATE(rgbaEnd, rgbaBegin, dist);
+        uint8_t dist = 255 - static_cast<int32_t>(255 * t);
+        uint32_t color = INTERPOLATE(rgbaEnd, rgbaBegin, dist);
         fill->ctable[i++] = ALPHA_BLEND(color, 0);
 
         if (i == GRADIENT_STOP_SIZE) i = 0;
@@ -187,10 +187,7 @@ static bool _updateColorTable(SwFill* fill, const Fill* fdata, const SwSurface<P
     uint32_t iAABegin = repeat ? _estimateAAMargin(fdata) : 0;
     uint32_t iAAEnd = 0;
 
-	if (sizeof(PIXEL_T) == 4)
-    	fill->ctable[i++] = ALPHA_BLEND(SOLID_C(rgba), a);
-	else // (sizeof(PIXEL_T) == 2)
-        fill->ctable[i++] = a;
+  	fill->ctable[i++] = ALPHA_BLEND(SOLID_C(rgba), a);
 
     while (pos <= pColors->offset) {
         fill->ctable[i] = fill->ctable[i - 1];
@@ -729,7 +726,7 @@ void fillLinear(const SwFill* fill, PixelType* dst, uint32_t y, uint32_t x, uint
     float inc = (fill->linear.dx) * (GRADIENT_STOP_SIZE - 1);
 
     if (tvg::zero(inc)) {
-        PixelType color = _fixedPixel<PixelType>(fill, static_cast<int16_t>(t * FIXPT_SIZE));
+        PixelType color = _fixedPixel<PixelType>(fill, static_cast<int32_t>(t * FIXPT_SIZE));
         for (uint32_t i = 0; i < len; ++i, ++dst) {
             *dst = op(color, *dst, a);
         }
