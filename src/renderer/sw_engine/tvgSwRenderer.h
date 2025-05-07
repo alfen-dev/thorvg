@@ -90,6 +90,6 @@ private:
 
 }
 
-#include "src\renderer\sw_engine\tvgSwRenderer.tpp"
+#include "src/renderer/sw_engine/tvgSwRenderer.tpp"
 
 #endif /* _TVG_SW_RENDERER_H_ */

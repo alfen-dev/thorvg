@@ -22,6 +22,7 @@
 
 #define THORVG_LOG_ENABLED 1
 
+// for framebuffer check 'fbset' linux console command
 // Define pixel type and update related _TYPE and _SHIFT
 #define PIXEL_TYPE uint16_t
 #ifdef __cplusplus
@@ -36,6 +37,10 @@ using PixelType = PIXEL_TYPE;
 //#define PIXEL_TYPE_SIZE 4
 //#define PIXEL_SIZE_SHIFT 2
 
+//#define PIXEL_TYPE uint16_t
+//#define PIXEL_TYPE_SIZE 2
+//#define PIXEL_SIZE_SHIFT 1
+
 #include "lvgl/src/misc/lv_assert.h"
 #define RAPIDJSON_ASSERT(x) LV_ASSERT(x)
 #define TVG_ASSERT(x) LV_ASSERT(x)
@@ -43,7 +48,7 @@ using PixelType = PIXEL_TYPE;
 
 
 
-#if 1
+#if 0
 
 #ifdef __cplusplus
 #include <cstring>
@@ -59,6 +64,12 @@ int SEGGER_RTT_printf(unsigned BufferIndex, const char * sFormat, ...);
 #define FILENAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #define TVGERR(tag, fmt, ...) SEGGER_RTT_printf(0, "%20s %4u TVG Err %s: " fmt "\n", FILENAME, __LINE__, tag, ##__VA_ARGS__)
 #define TVGLOG(tag, fmt, ...) SEGGER_RTT_printf(0, "%20s %4u TVG Inf %s: " fmt "\n", FILENAME, __LINE__, tag, ##__VA_ARGS__)
+
+#elif 1
+
+#define FILENAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+#define TVGERR(tag, fmt, ...) printf("%20s %4u TVG Err %s: " fmt "\n", FILENAME, __LINE__, tag, ##__VA_ARGS__)
+#define TVGLOG(tag, fmt, ...) printf("%20s %4u TVG Inf %s: " fmt "\n", FILENAME, __LINE__, tag, ##__VA_ARGS__)
 
 #else 
 

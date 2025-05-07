@@ -562,7 +562,7 @@ inline PIXEL_T opBlendHardLight(PIXEL_T s, PIXEL_T d, TVG_UNUSED uint8_t a);
 template<typename PIXEL_T>
 inline PIXEL_T opBlendSoftLight(PIXEL_T s, PIXEL_T d, TVG_UNUSED uint8_t a);
 
-#include "src\renderer\sw_engine\tvgSwCommon.tpp"
+#include "src/renderer/sw_engine/tvgSwCommon.tpp"
 
 int64_t mathMultiply(int64_t a, int64_t b);
 int64_t mathDivide(int64_t a, int64_t b);
@@ -629,7 +629,7 @@ void fillRadial(const SwFill* fill, PixelType* dst, uint32_t y, uint32_t x, uint
 void fillRadial(const SwFill* fill, PixelType* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PixelType> op, SwBlender<PixelType> op2, uint8_t a);                          //blending + BlendingMethod(op2) ver.
 void fillRadial(const SwFill* fill, PixelType* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwAlpha alpha, uint8_t csize, uint8_t opacity);     //matting ver.
 
-#include "src\renderer\sw_engine\tvgSwFill.tpp"
+#include "src/renderer/sw_engine/tvgSwFill.tpp"
 
 
 SwRle* rleRender(SwRle* rle, const SwOutline* outline, const SwBBox& renderRegion, bool antiAlias);
@@ -672,7 +672,7 @@ void rasterPremultiply(RenderSurface* surface);
 bool rasterConvertCS(RenderSurface* surface, ColorSpace to);
 uint32_t rasterUnpremultiply(uint32_t data);
 
-#include "src\renderer\sw_engine\tvgSwRaster.tpp"
+#include "src/renderer/sw_engine/tvgSwRaster.tpp"
 
 
 bool effectGaussianBlur(SwCompositor* cmp, SwSurface<PixelType>* surface, const RenderEffectGaussianBlur* params);

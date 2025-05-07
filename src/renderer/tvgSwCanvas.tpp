@@ -23,8 +23,8 @@
 #include "thorvg.h"
 
 #include "tvgCanvas.h"
-#include "src\renderer\tvgLoadModule.h"
-#include "src\renderer\sw_engine\tvgSwRenderer.h"
+#include "src/renderer/tvgLoadModule.h"
+#include "src/renderer/sw_engine/tvgSwRenderer.h"
 
 
 
