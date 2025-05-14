@@ -32,7 +32,7 @@ namespace tvg
 {
 
 template<typename PIXEL_T>
-Result SwCanvas::target(PIXEL_T* buffer, uint32_t stride_pixels, uint32_t w, uint32_t h, ColorSpace cs) noexcept
+Result SwCanvas::target(PIXEL_T* buffer, int32_t x, int32_t y, uint32_t stride_pixels, uint32_t w, uint32_t h, ColorSpace cs) noexcept
 {
 #ifdef THORVG_SW_RASTER_SUPPORT
     if (Canvas::pImpl->status != Status::Damaged && Canvas::pImpl->status != Status::Synced) {
@@ -43,8 +43,8 @@ Result SwCanvas::target(PIXEL_T* buffer, uint32_t stride_pixels, uint32_t w, uin
     auto renderer = static_cast<SwRenderer*>(Canvas::pImpl->renderer);
     if (!renderer) return Result::MemoryCorruption;
 
-    if (!renderer->target<PIXEL_T>(buffer, stride_pixels, w, h, cs)) return Result::InvalidArguments;
-    Canvas::pImpl->vport = {0, 0, (int32_t)w, (int32_t)h};
+    if (!renderer->target<PIXEL_T>(buffer, x, y, stride_pixels, w, h, cs)) return Result::InvalidArguments;
+    Canvas::pImpl->vport = {x, y, (int32_t)w, (int32_t)h};
     renderer->viewport(Canvas::pImpl->vport);
 
     //FIXME: The value must be associated with an individual canvas instance.

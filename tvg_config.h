@@ -15,6 +15,9 @@
 
 #define THORVG_VERSION_STRING "0.15.3"
 
+#define RENDER_POOL_SIZE_REDUCED 1200L
+
+
 #define THORVG_LOG_ENABLED 1
 
 // for framebuffer check 'fbset' linux console command

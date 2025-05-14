@@ -847,8 +847,11 @@ SwRle* rleRender(SwRle* rle, const SwOutline* outline, const SwBBox& renderRegio
 {
     if (!outline) return nullptr;
 
-//    constexpr auto RENDER_POOL_SIZE = 16384L;
-    constexpr auto RENDER_POOL_SIZE = 2400L;
+#ifdef RENDER_POOL_SIZE_REDUCED
+    constexpr auto RENDER_POOL_SIZE = RENDER_POOL_SIZE_REDUCED;
+#else
+    constexpr auto RENDER_POOL_SIZE = 16384L;
+#endif    
     constexpr auto BAND_SIZE = 40;
 
     //TODO: We can preserve several static workers in advance

@@ -542,7 +542,7 @@ static bool _rasterDirectMaskedRle(SwSurface<PIXEL_TYPE>* surface, SwRle* rle, S
 
     for (uint32_t i = 0; i < rle->size; ++i, ++span) {
         auto cmp = &cbuffer[span->y * cstride + span->x];
-        auto dst = &surface->buf8[span->y * surface->stride_pixels + span->x];
+        auto dst = &surface->buf8[(surface->y + span->y) * surface->stride_pixels + (surface->x + span->x)];
         if (span->coverage == 255) src = a;
         else src = MULTIPLY(a, span->coverage);
         for (auto x = 0; x < span->len; ++x, ++cmp, ++dst) {
@@ -582,7 +582,7 @@ static bool _rasterMattedRle(SwSurface<PIXEL_TYPE>* surface, SwRle* rle, const R
         PIXEL_TYPE src;
         PIXEL_TYPE color = surface->join(c.r, c.g, c.b, c.a);
         for (uint32_t i = 0; i < rle->size; ++i, ++span) {
-            auto dst = &surface->pixel_buffer[span->y * surface->stride_pixels + span->x];
+            auto dst = &surface->pixel_buffer[(surface->y + span->y) * surface->stride_pixels + (surface->x + span->x)];
             auto cmp = &cbuffer[(span->y * surface->compositor->image.stride_pixels + span->x) * csize];
             if (span->coverage == 255) src = color;
             else src = ALPHA_BLEND(color, span->coverage);
@@ -596,7 +596,7 @@ static bool _rasterMattedRle(SwSurface<PIXEL_TYPE>* surface, SwRle* rle, const R
     else {
         uint8_t src;
         for (uint32_t i = 0; i < rle->size; ++i, ++span) {
-            auto dst = &surface->buf8[span->y * surface->stride_pixels + span->x];
+            auto dst = &surface->buf8[(surface->y + span->y) * surface->stride_pixels + (surface->x + span->x)];
             auto cmp = &cbuffer[(span->y * surface->compositor->image.stride_pixels + span->x) * csize];
             if (span->coverage == 255) src = c.a;
             else src = MULTIPLY(c.a, span->coverage);
@@ -617,7 +617,7 @@ static bool _rasterBlendingRle(SwSurface<PIXEL_TYPE>* surface, const SwRle* rle,
     PIXEL_TYPE color = surface->join(c.r, c.g, c.b, c.a);
 
     for (uint32_t i = 0; i < rle->size; ++i, ++span) {
-        auto dst = &surface->pixel_buffer[span->y * surface->stride_pixels + span->x];
+        auto dst = &surface->pixel_buffer[(surface->y + span->y) * surface->stride_pixels + (surface->x + span->x)];
         if (span->coverage == 255) {
             for (uint32_t x = 0; x < span->len; ++x, ++dst) {
                 *dst = surface->blender(color, *dst, 255);
@@ -654,9 +654,9 @@ static bool _rasterSolidRle(SwSurface<PIXEL_TYPE>* surface, const SwRle* rle, co
         PIXEL_TYPE color = surface->join(c.r, c.g, c.b, 255);
         for (uint32_t i = 0; i < rle->size; ++i, ++span) {
             if (span->coverage == 255) {
-                rasterPixel(surface->pixel_buffer + span->y * surface->stride_pixels, color, span->x, span->len);
+                rasterPixel(surface->pixel_buffer + (surface->y + span->y) * surface->stride_pixels, color, (surface->x + span->x), span->len);
             } else {
-                PIXEL_TYPE* dst = &surface->pixel_buffer[span->y * surface->stride_pixels + span->x];
+                PIXEL_TYPE* dst = &surface->pixel_buffer[(surface->y + span->y) * surface->stride_pixels + (surface->x + span->x)];
                 PIXEL_TYPE src = ALPHA_BLEND(color, span->coverage);
                 uint8_t ialpha = 255 - span->coverage;
                 for (uint32_t x = 0; x < span->len; ++x, ++dst) {
@@ -669,9 +669,9 @@ static bool _rasterSolidRle(SwSurface<PIXEL_TYPE>* surface, const SwRle* rle, co
     else {
         for (uint32_t i = 0; i < rle->size; ++i, ++span) {
             if (span->coverage == 255) {
-                rasterGrayscale8(surface->buf8, span->coverage, span->y * surface->stride_pixels + span->x, span->len);
+                rasterGrayscale8(surface->buf8, span->coverage, (surface->y + span->y) * surface->stride_pixels + (surface->x + span->x), span->len);
             } else {
-                auto dst = &surface->buf8[span->y * surface->stride_pixels + span->x];
+                auto dst = &surface->buf8[(surface->y + span->y) * surface->stride_pixels + (surface->x + span->x)];
                 auto ialpha = 255 - span->coverage;
                 for (uint32_t x = 0; x < span->len; ++x, ++dst) {
                     *dst = span->coverage + MULTIPLY(*dst, ialpha);
@@ -739,7 +739,7 @@ static bool _rasterScaledMattedRleImage(SwSurface<PIXEL_TYPE>* surface, const Sw
 
     for (uint32_t i = 0; i < image->rle->size; ++i, ++span) {
         SCALED_IMAGE_RANGE_Y(span->y)
-        PIXEL_TYPE* dst = &surface->pixel_buffer[span->y * surface->stride_pixels + span->x];
+        PIXEL_TYPE* dst = &surface->pixel_buffer[(surface->y + span->y) * surface->stride_pixels + (surface->x + span->x)];
         auto cmp = &surface->compositor->image.buf8[(span->y * surface->compositor->image.stride_pixels + span->x) * csize];
         auto a = MULTIPLY(span->coverage, opacity);
         for (uint32_t x = static_cast<uint32_t>(span->x); x < static_cast<uint32_t>(span->x) + span->len; ++x, ++dst, cmp += csize) {
@@ -762,7 +762,7 @@ static bool _rasterScaledBlendingRleImage(SwSurface<PIXEL_TYPE>* surface, const 
 
     for (uint32_t i = 0; i < image->rle->size; ++i, ++span) {
         SCALED_IMAGE_RANGE_Y(span->y)
-        PIXEL_TYPE* dst = &surface->pixel_buffer[span->y * surface->stride_pixels + span->x];
+        PIXEL_TYPE* dst = &surface->pixel_buffer[(surface->y + span->y) * surface->stride_pixels + (surface->x + span->x)];
         auto alpha = MULTIPLY(span->coverage, opacity);
         if (alpha == 255) {
             for (uint32_t x = static_cast<uint32_t>(span->x); x < static_cast<uint32_t>(span->x) + span->len; ++x, ++dst) {
@@ -793,7 +793,7 @@ static bool _rasterScaledRleImage(SwSurface<PIXEL_TYPE>* surface, const SwImage*
 
     for (uint32_t i = 0; i < image->rle->size; ++i, ++span) {
         SCALED_IMAGE_RANGE_Y(span->y)
-        auto dst = &surface->pixel_buffer[span->y * surface->stride_pixels + span->x];
+        auto dst = &surface->pixel_buffer[(surface->y + span->y) * surface->stride_pixels + (surface->x + span->x)];
         auto alpha = MULTIPLY(span->coverage, opacity);
         for (uint32_t x = static_cast<uint32_t>(span->x); x < static_cast<uint32_t>(span->x) + span->len; ++x, ++dst) {
             SCALED_IMAGE_RANGE_X
@@ -843,7 +843,7 @@ static bool _rasterDirectMattedRleImage(SwSurface<PIXEL_TYPE>* surface, const Sw
     auto alpha = surface->alpha(surface->compositor->method);
 
     for (uint32_t i = 0; i < image->rle->size; ++i, ++span) {
-        auto dst = &surface->pixel_buffer[span->y * surface->stride_pixels + span->x];
+        auto dst = &surface->pixel_buffer[(surface->y + span->y) * surface->stride_pixels + (surface->x + span->x)];
         auto cmp = &cbuffer[(span->y * surface->compositor->image.stride_pixels + span->x) * csize];
         auto img = image->pixel_buffer + (span->y + image->oy) * image->stride_pixels + (span->x + image->ox);
         auto a = MULTIPLY(span->coverage, opacity);
@@ -868,7 +868,7 @@ static bool _rasterDirectBlendingRleImage(SwSurface<PIXEL_TYPE>* surface, const 
     auto span = image->rle->spans;
 
     for (uint32_t i = 0; i < image->rle->size; ++i, ++span) {
-        PIXEL_TYPE* dst = &surface->pixel_buffer[span->y * surface->stride_pixels + span->x];
+        PIXEL_TYPE* dst = &surface->pixel_buffer[(surface->y + span->y) * surface->stride_pixels + (surface->x + span->x)];
         auto img = image->pixel_buffer + (span->y + image->oy) * image->stride_pixels + (span->x + image->ox);
         auto alpha = MULTIPLY(span->coverage, opacity);
         if (alpha == 255) {
@@ -891,7 +891,7 @@ static bool _rasterDirectRleImage(SwSurface<PIXEL_TYPE>* surface, const SwImage*
     auto span = image->rle->spans;
 
     for (uint32_t i = 0; i < image->rle->size; ++i, ++span) {
-        PIXEL_TYPE* dst = &surface->pixel_buffer[span->y * surface->stride_pixels + span->x];
+        PIXEL_TYPE* dst = &surface->pixel_buffer[(surface->y + span->y) * surface->stride_pixels + (surface->x + span->x)];
         auto img = image->pixel_buffer + (span->y + image->oy) * image->stride_pixels + (span->x + image->ox);
         auto alpha = MULTIPLY(span->coverage, opacity);
         rasterTranslucentPixel(dst, img, span->len, alpha);
@@ -1467,7 +1467,7 @@ static bool _rasterDirectGradientMaskedRle(SwSurface<PIXEL_TYPE>* surface, const
 
     for (uint32_t i = 0; i < rle->size; ++i, ++span) {
         auto cmp = &cbuffer[span->y * cstride + span->x];
-        auto dst = &dbuffer[span->y * surface->stride_pixels + span->x];
+        auto dst = &dbuffer[(surface->y + span->y) * surface->stride_pixels + (surface->x + span->x)];
         fillMethod()(fill, dst, span->y, span->x, span->len, cmp, maskOp, span->coverage);
     }
     return true;
@@ -1500,7 +1500,7 @@ static bool _rasterGradientMattedRle(SwSurface<PIXEL_TYPE>* surface, const SwRle
     auto alpha = surface->alpha(surface->compositor->method);
 
     for (uint32_t i = 0; i < rle->size; ++i, ++span) {
-        auto dst = &surface->pixel_buffer[span->y * surface->stride_pixels + span->x];
+        auto dst = &surface->pixel_buffer[(surface->y + span->y) * surface->stride_pixels + (surface->x + span->x)];
         auto cmp = &cbuffer[(span->y * surface->compositor->image.stride_pixels + span->x) * csize];
         fillMethod()(fill, dst, span->y, span->x, span->len, cmp, alpha, csize, span->coverage);
     }
@@ -1514,7 +1514,7 @@ static bool _rasterBlendingGradientRle(SwSurface<PIXEL_TYPE>* surface, const SwR
     auto span = rle->spans;
 
     for (uint32_t i = 0; i < rle->size; ++i, ++span) {
-        auto dst = &surface->pixel_buffer[span->y * surface->stride_pixels + span->x];
+        auto dst = &surface->pixel_buffer[(surface->y + span->y) * surface->stride_pixels + (surface->x + span->x)];
         fillMethod()(fill, dst, span->y, span->x, span->len, opBlendPreNormal<PIXEL_TYPE>, surface->blender, span->coverage);
     }
     return true;
@@ -1529,7 +1529,7 @@ static bool _rasterTranslucentGradientRle(SwSurface<PIXEL_TYPE>* surface, const 
     //16/32bits channels
     if (surface->channelSize != sizeof(uint8_t)) {
         for (uint32_t i = 0; i < rle->size; ++i, ++span) {
-            auto dst = &surface->pixel_buffer[span->y * surface->stride_pixels + span->x];
+            auto dst = &surface->pixel_buffer[(surface->y + span->y) * surface->stride_pixels + (surface->x + span->x)];
             if (span->coverage == 255) fillMethod()(fill, dst, span->y, span->x, span->len, opBlendPreNormal<PIXEL_TYPE>, 255);
             else fillMethod()(fill, dst, span->y, span->x, span->len, opBlendNormal<PIXEL_TYPE>, span->coverage);
         }
@@ -1537,7 +1537,7 @@ static bool _rasterTranslucentGradientRle(SwSurface<PIXEL_TYPE>* surface, const 
     //8 bits
     else {
         for (uint32_t i = 0; i < rle->size; ++i, ++span) {
-            auto dst = &surface->buf8[span->y * surface->stride_pixels + span->x];
+            auto dst = &surface->buf8[(surface->y + span->y) * surface->stride_pixels + (surface->x + span->x)];
             fillMethod()(fill, dst, span->y, span->x, span->len, _opMaskAdd, span->coverage);
         }
     }
@@ -1553,7 +1553,7 @@ static bool _rasterSolidGradientRle(SwSurface<PIXEL_TYPE>* surface, const SwRle*
     //16/32bits channels
     if (surface->channelSize != sizeof(uint8_t)) {
         for (uint32_t i = 0; i < rle->size; ++i, ++span) {
-            auto dst = &surface->pixel_buffer[span->y * surface->stride_pixels + span->x];
+            auto dst = &surface->pixel_buffer[(surface->y + span->y) * surface->stride_pixels + (surface->x + span->x)];
             if (span->coverage == 255) fillMethod()(fill, dst, span->y, span->x, span->len, opBlendSrcOver<PIXEL_TYPE>, 255);
             else fillMethod()(fill, dst, span->y, span->x, span->len, opBlendInterp<PIXEL_TYPE>, span->coverage);
         }
@@ -1561,7 +1561,7 @@ static bool _rasterSolidGradientRle(SwSurface<PIXEL_TYPE>* surface, const SwRle*
     //8 bits
     else {
         for (uint32_t i = 0; i < rle->size; ++i, ++span) {
-            auto dst = &surface->buf8[span->y * surface->stride_pixels + span->x];
+            auto dst = &surface->buf8[(surface->y + span->y) * surface->stride_pixels + (surface->x + span->x)];
             if (span->coverage == 255) fillMethod()(fill, dst, span->y, span->x, span->len, _opMaskNone, 255);
             else fillMethod()(fill, dst, span->y, span->x, span->len, _opMaskAdd, span->coverage);
         }

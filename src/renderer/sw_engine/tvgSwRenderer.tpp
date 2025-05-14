@@ -26,7 +26,7 @@
 #include "tvgSwCommon.h"
 
 template<typename PIXEL_T>
-bool SwRenderer::target(PIXEL_T* data, uint32_t stride_pixels, uint32_t w, uint32_t h, ColorSpace cs)
+bool SwRenderer::target(PIXEL_T* data, uint32_t x, uint32_t y, uint32_t stride_pixels, uint32_t w, uint32_t h, ColorSpace cs)
 {
     if (!data || stride_pixels == 0 || w == 0 || h == 0 || w > stride_pixels) return false;
 
@@ -36,6 +36,8 @@ bool SwRenderer::target(PIXEL_T* data, uint32_t stride_pixels, uint32_t w, uint3
 
     surface->data = data;
     surface->stride_pixels = stride_pixels;
+    surface->x = x;
+    surface->y = y;
     surface->w = w;
     surface->h = h;
     surface->cs = cs;
