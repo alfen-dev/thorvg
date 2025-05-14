@@ -36,7 +36,7 @@ namespace tvg
 {
 
 using RenderData = void*;
-using pixel_t = PIXEL_TYPE;
+using pixel_t = PixelType;
 
 #define DASH_PATTERN_THRESHOLD 0.001f
 
@@ -58,7 +58,7 @@ struct RenderSurface
 {
     union {
         void* data = nullptr;    //system based data pointer
-        pixel_t* pixel_buffer;         //for explicit 16/32bits channels
+        pixel_t* pixelBuffer;         //for explicit 16/32bits channels
         uint8_t* buf8;         //for explicit 8bits channels
     };
     Key key;                     //a reserved lock for the thread safety

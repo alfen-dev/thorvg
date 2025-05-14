@@ -157,7 +157,7 @@ struct SwFill
         SwRadial radial;
     };
 
-    PIXEL_TYPE* ctable;
+    PixelType* ctable;
     FillSpread spread;
 
     bool solid = false; //solid color fill with the last color from colorStops
@@ -231,7 +231,7 @@ struct SwImage
     SwRle*   rle = nullptr;
     union {
         void*  data;      //system based data pointer
-        PIXEL_TYPE* pixel_buffer;     //for explicit 8/16/32bits channels
+        PixelType* pixelBuffer;     //for explicit 8/16/32bits channels
         uint8_t* buf8;     //for explicit 8bits channels
     };
     uint32_t     w, h, stride_pixels;
@@ -284,7 +284,7 @@ struct SwSurface : RenderSurface
 
 struct SwCompositor : RenderCompositor
 {
-    SwSurface<PIXEL_TYPE>* recoverSfc;                  //Recover surface when composition is started
+    SwSurface<PixelType>* recoverSfc;                  //Recover surface when composition is started
     SwCompositor* recoverCmp;               //Recover compositor when composition is done
     SwImage image;
     SwBBox bbox;
@@ -590,8 +590,8 @@ void shapeResetStroke(SwShape* shape, const RenderShape* rshape, const Matrix& t
 bool shapeGenStrokeRle(SwShape* shape, const RenderShape* rshape, const Matrix& transform, const SwBBox& clipRegion, SwBBox& renderRegion, SwMpool* mpool, unsigned tid);
 void shapeFree(SwShape* shape);
 void shapeDelStroke(SwShape* shape);
-bool shapeGenFillColors(SwShape* shape, const Fill* fill, const Matrix& transform, SwSurface<PIXEL_TYPE>* surface, uint8_t opacity, bool ctable);
-bool shapeGenStrokeFillColors(SwShape* shape, const Fill* fill, const Matrix& transform, SwSurface<PIXEL_TYPE>* surface, uint8_t opacity, bool ctable);
+bool shapeGenFillColors(SwShape* shape, const Fill* fill, const Matrix& transform, SwSurface<PixelType>* surface, uint8_t opacity, bool ctable);
+bool shapeGenStrokeFillColors(SwShape* shape, const Fill* fill, const Matrix& transform, SwSurface<PixelType>* surface, uint8_t opacity, bool ctable);
 void shapeResetFill(SwShape* shape);
 void shapeResetStrokeFill(SwShape* shape);
 void shapeDelFill(SwShape* shape);
@@ -608,7 +608,7 @@ void imageDelOutline(SwImage* image, SwMpool* mpool, uint32_t tid);
 void imageReset(SwImage* image);
 void imageFree(SwImage* image);
 
-bool fillGenColorTable(SwFill* fill, const Fill* fdata, const Matrix& transform, SwSurface<PIXEL_TYPE>* surface, uint8_t opacity, bool ctable);
+bool fillGenColorTable(SwFill* fill, const Fill* fdata, const Matrix& transform, SwSurface<PixelType>* surface, uint8_t opacity, bool ctable);
 const Fill::ColorStop* fillFetchSolid(const SwFill* fill, const Fill* fdata);
 void fillReset(SwFill* fill);
 void fillFree(SwFill* fill);
@@ -617,16 +617,16 @@ void fillFree(SwFill* fill);
 void fillLinear(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32_t len, SwMask maskOp, uint8_t opacity);                                   //composite masking ver.
 void fillLinear(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwMask maskOp, uint8_t opacity);                     //direct masking ver.
 
-void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PIXEL_TYPE> op, uint8_t a);                                         //blending ver.
-void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PIXEL_TYPE> op, SwBlender<PIXEL_TYPE> op2, uint8_t a);                          //blending + BlendingMethod(op2) ver.
-void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwAlpha alpha, uint8_t csize, uint8_t opacity);     //matting ver.
+void fillLinear(const SwFill* fill, PixelType* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PixelType> op, uint8_t a);                                         //blending ver.
+void fillLinear(const SwFill* fill, PixelType* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PixelType> op, SwBlender<PixelType> op2, uint8_t a);                          //blending + BlendingMethod(op2) ver.
+void fillLinear(const SwFill* fill, PixelType* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwAlpha alpha, uint8_t csize, uint8_t opacity);     //matting ver.
 
 void fillRadial(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32_t len, SwMask op, uint8_t a);                                             //composite masking ver.
 void fillRadial(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwMask op, uint8_t a) ;                              //direct masking ver.
 
-void fillRadial(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PIXEL_TYPE> op, uint8_t a);                                         //blending ver.
-void fillRadial(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PIXEL_TYPE> op, SwBlender<PIXEL_TYPE> op2, uint8_t a);                          //blending + BlendingMethod(op2) ver.
-void fillRadial(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwAlpha alpha, uint8_t csize, uint8_t opacity);     //matting ver.
+void fillRadial(const SwFill* fill, PixelType* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PixelType> op, uint8_t a);                                         //blending ver.
+void fillRadial(const SwFill* fill, PixelType* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PixelType> op, SwBlender<PixelType> op2, uint8_t a);                          //blending + BlendingMethod(op2) ver.
+void fillRadial(const SwFill* fill, PixelType* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwAlpha alpha, uint8_t csize, uint8_t opacity);     //matting ver.
 
 #include "src/renderer/sw_engine/tvgSwFill.tpp"
 
@@ -649,13 +649,13 @@ void mpoolRetStrokeOutline(SwMpool* mpool, unsigned idx);
 SwOutline* mpoolReqDashOutline(SwMpool* mpool, unsigned idx);
 void mpoolRetDashOutline(SwMpool* mpool, unsigned idx);
 
-bool rasterCompositor(SwSurface<PIXEL_TYPE>* surface);
-bool rasterGradientShape(SwSurface<PIXEL_TYPE>* surface, SwShape* shape, const Fill* fdata, uint8_t opacity);
-bool rasterShape(SwSurface<PIXEL_TYPE>* surface, SwShape* shape, RenderColor& c);
-bool rasterImage(SwSurface<PIXEL_TYPE>* surface, SwImage* image, const Matrix& transform, const SwBBox& bbox, uint8_t opacity);
-bool rasterStroke(SwSurface<PIXEL_TYPE>* surface, SwShape* shape, RenderColor& c);
-bool rasterGradientStroke(SwSurface<PIXEL_TYPE>* surface, SwShape* shape, const Fill* fdata, uint8_t opacity);
-bool rasterClear(SwSurface<PIXEL_TYPE>* surface, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t color = 0);
+bool rasterCompositor(SwSurface<PixelType>* surface);
+bool rasterGradientShape(SwSurface<PixelType>* surface, SwShape* shape, const Fill* fdata, uint8_t opacity);
+bool rasterShape(SwSurface<PixelType>* surface, SwShape* shape, RenderColor& c);
+bool rasterImage(SwSurface<PixelType>* surface, SwImage* image, const Matrix& transform, const SwBBox& bbox, uint8_t opacity);
+bool rasterStroke(SwSurface<PixelType>* surface, SwShape* shape, RenderColor& c);
+bool rasterGradientStroke(SwSurface<PixelType>* surface, SwShape* shape, const Fill* fdata, uint8_t opacity);
+bool rasterClear(SwSurface<PixelType>* surface, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t color = 0);
 
 void rasterPixel(uint32_t *dst, uint32_t val, uint32_t offset, int32_t len);
 void rasterPixel(uint16_t *dst, uint16_t val, uint32_t offset, int32_t len);
@@ -674,10 +674,10 @@ uint32_t rasterUnpremultiply(uint32_t data);
 #include "src/renderer/sw_engine/tvgSwRaster.tpp"
 
 
-bool effectGaussianBlur(SwCompositor* cmp, SwSurface<PIXEL_TYPE>* surface, const RenderEffectGaussianBlur* params);
+bool effectGaussianBlur(SwCompositor* cmp, SwSurface<PixelType>* surface, const RenderEffectGaussianBlur* params);
 bool effectGaussianBlurRegion(RenderEffectGaussianBlur* effect);
 void effectGaussianBlurUpdate(RenderEffectGaussianBlur* effect, const Matrix& transform);
-bool effectDropShadow(SwCompositor* cmp, SwSurface<PIXEL_TYPE>* surfaces[2], const RenderEffectDropShadow* params, bool direct);
+bool effectDropShadow(SwCompositor* cmp, SwSurface<PixelType>* surfaces[2], const RenderEffectDropShadow* params, bool direct);
 bool effectDropShadowRegion(RenderEffectDropShadow* effect);
 void effectDropShadowUpdate(RenderEffectDropShadow* effect, const Matrix& transform);
 void effectFillUpdate(RenderEffectFill* effect);

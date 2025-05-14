@@ -807,7 +807,7 @@ void GlRenderer::endRenderPass(RenderCompositor* cmp)
 /* External Class Implementation                                        */
 /************************************************************************/
 
-bool GlRenderer::clear(PIXEL_TYPE color)
+bool GlRenderer::clear(PixelType color)
 {
     if (mRootTarget.invalid()) return false;
 

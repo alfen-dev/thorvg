@@ -301,7 +301,7 @@ const RenderSurface* WgRenderer::mainSurface()
 }
 
 
-bool WgRenderer::clear(PIXEL_TYPE color)
+bool WgRenderer::clear(PixelType color)
 {
     if (mContext.invalid()) return false;
 

@@ -32,7 +32,7 @@ public:
     ~RawLoader();
 
     using LoadModule::open;
-    bool open(const PIXEL_TYPE* data, uint32_t w, uint32_t h, ColorSpace cs, bool copy);
+    bool open(const PixelType* data, uint32_t w, uint32_t h, ColorSpace cs, bool copy);
     bool read() override;
 };
 

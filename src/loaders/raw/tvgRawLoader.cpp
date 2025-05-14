@@ -32,11 +32,11 @@ RawLoader::RawLoader() : ImageLoader(FileType::Raw)
 
 RawLoader::~RawLoader()
 {
-    if (copy) tvg::free(surface.pixel_buffer);
+    if (copy) tvg::free(surface.pixelBuffer);
 }
 
 
-bool RawLoader::open(const PIXEL_TYPE* data, uint32_t w, uint32_t h, ColorSpace cs, bool copy)
+bool RawLoader::open(const PixelType* data, uint32_t w, uint32_t h, ColorSpace cs, bool copy)
 {
     if (!LoadModule::read()) return true;
 
@@ -47,18 +47,18 @@ bool RawLoader::open(const PIXEL_TYPE* data, uint32_t w, uint32_t h, ColorSpace 
     this->copy = copy;
 
     if (copy) {
-        surface.pixel_buffer = tvg::malloc<PIXEL_TYPE*>(sizeof(PIXEL_TYPE) * w * h);
-        if (!surface.pixel_buffer) return false;
-        memcpy((void*)surface.pixel_buffer, data, sizeof(PIXEL_TYPE) * w * h);
+        surface.pixelBuffer = tvg::malloc<PixelType*>(sizeof(PixelType) * w * h);
+        if (!surface.pixelBuffer) return false;
+        memcpy((void*)surface.pixelBuffer, data, sizeof(PixelType) * w * h);
     }
-    else surface.pixel_buffer = const_cast<PIXEL_TYPE*>(data);
+    else surface.pixelBuffer = const_cast<PixelType*>(data);
 
     //setup the surface
     surface.stride_pixels = w;
     surface.w = w;
     surface.h = h;
     surface.cs = cs;
-    surface.channelSize = sizeof(PIXEL_TYPE);
+    surface.channelSize = sizeof(PixelType);
 #if PIXEL_TYPE_SIZE == 4
     surface.premultiplied = (cs == ColorSpace::ABGR8888 || cs == ColorSpace::ARGB8888) ? true : false;
 #elif PIXEL_TYPE_SIZE == 2

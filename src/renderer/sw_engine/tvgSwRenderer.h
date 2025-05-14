@@ -72,9 +72,9 @@ public:
     static bool term();
 
 private:
-    SwSurface<PIXEL_TYPE>*           surface = nullptr;           //active surface
+    SwSurface<PixelType>*           surface = nullptr;           //active surface
     Array<SwTask*>       tasks;                       //async task list
-    Array<SwSurface<PIXEL_TYPE>*>    compositors;                 //render targets cache list
+    Array<SwSurface<PixelType>*>    compositors;                 //render targets cache list
     SwMpool*             mpool;                       //private memory pool
     RenderRegion         vport;                       //viewport
     bool                 sharedMpool;                 //memory-pool behavior policy
@@ -82,7 +82,7 @@ private:
     SwRenderer();
     ~SwRenderer();
 
-    SwSurface<PIXEL_TYPE>* request(int channelSize, bool square);
+    SwSurface<PixelType>* request(int channelSize, bool square);
     RenderData prepareCommon(SwTask* task, const Matrix& transform, const Array<RenderData>& clips, uint8_t opacity, RenderUpdateFlag flags);
 };
 

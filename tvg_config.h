@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #define THORVG_SW_RASTER_SUPPORT 1
 
 #define THORVG_CAPI_BINDING_SUPPORT 1
@@ -23,7 +25,10 @@
 // for framebuffer check 'fbset' linux console command
 // Define pixel type and update related _TYPE and _SHIFT
 #define PIXEL_TYPE uint16_t
-// size of PIXEL_TYPE in BYTES
+#ifdef __cplusplus
+using PixelType = PIXEL_TYPE;
+#endif
+// size of PixelType in BYTES
 #define PIXEL_TYPE_SIZE 2
 // (a << PIXEL_SIZE_SHIFT) equals (a * PIXEL_TYPE_SIZE)
 #define PIXEL_SIZE_SHIFT 1

@@ -378,7 +378,7 @@ static inline PIXEL_T _pixel(const SwFill* fill, float pos)
 /************************************************************************/
 
 
-void fillRadial(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwAlpha alpha, uint8_t csize, uint8_t opacity)
+void fillRadial(const SwFill* fill, PixelType* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwAlpha alpha, uint8_t csize, uint8_t opacity)
 {
     //edge case
     if (fill->radial.a < RADIAL_A_THRESHOLD) {
@@ -389,14 +389,14 @@ void fillRadial(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
         if (opacity == 255) {
             for (uint32_t i = 0 ; i < len ; ++i, ++dst, cmp += csize) {
                 auto x0 = 0.5f * (rx * rx + ry * ry - radial->fr * radial->fr) / (radial->dr * radial->fr + rx * radial->dx + ry * radial->dy);
-                *dst = opBlendNormal<PIXEL_TYPE>(_pixel<PIXEL_TYPE>(fill, x0), *dst, alpha(cmp));
+                *dst = opBlendNormal<PixelType>(_pixel<PixelType>(fill, x0), *dst, alpha(cmp));
                 rx += radial->a11;
                 ry += radial->a21;
             }
         } else {
             for (uint32_t i = 0 ; i < len ; ++i, ++dst, cmp += csize) {
                 auto x0 = 0.5f * (rx * rx + ry * ry - radial->fr * radial->fr) / (radial->dr * radial->fr + rx * radial->dx + ry * radial->dy);
-                *dst = opBlendNormal<PIXEL_TYPE>(_pixel<PIXEL_TYPE>(fill, x0), *dst, MULTIPLY(opacity, alpha(cmp)));
+                *dst = opBlendNormal<PixelType>(_pixel<PixelType>(fill, x0), *dst, MULTIPLY(opacity, alpha(cmp)));
                 rx += radial->a11;
                 ry += radial->a21;
             }
@@ -407,14 +407,14 @@ void fillRadial(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
 
         if (opacity == 255) {
             for (uint32_t i = 0 ; i < len ; ++i, ++dst, cmp += csize) {
-                *dst = opBlendNormal<PIXEL_TYPE>(_pixel<PIXEL_TYPE>(fill, sqrtf(det) - b), *dst, alpha(cmp));
+                *dst = opBlendNormal<PixelType>(_pixel<PixelType>(fill, sqrtf(det) - b), *dst, alpha(cmp));
                 det += deltaDet;
                 deltaDet += deltaDeltaDet;
                 b += deltaB;
             }
         } else {
             for (uint32_t i = 0 ; i < len ; ++i, ++dst, cmp += csize) {
-                *dst = opBlendNormal<PIXEL_TYPE>(_pixel<PIXEL_TYPE>(fill, sqrtf(det) - b), *dst, MULTIPLY(opacity, alpha(cmp)));
+                *dst = opBlendNormal<PixelType>(_pixel<PixelType>(fill, sqrtf(det) - b), *dst, MULTIPLY(opacity, alpha(cmp)));
                 det += deltaDet;
                 deltaDet += deltaDeltaDet;
                 b += deltaB;
@@ -423,7 +423,7 @@ void fillRadial(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
     }
 }
 
-void fillRadial(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PIXEL_TYPE> op, uint8_t a)
+void fillRadial(const SwFill* fill, PixelType* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PixelType> op, uint8_t a)
 {
     if (fill->radial.a < RADIAL_A_THRESHOLD) {
         auto radial = &fill->radial;
@@ -431,7 +431,7 @@ void fillRadial(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
         auto ry = (x + 0.5f) * radial->a21 + (y + 0.5f) * radial->a22 + radial->a23 - radial->fy;
         for (uint32_t i = 0; i < len; ++i, ++dst) {
             auto x0 = 0.5f * (rx * rx + ry * ry - radial->fr * radial->fr) / (radial->dr * radial->fr + rx * radial->dx + ry * radial->dy);
-            *dst = op(_pixel<PIXEL_TYPE>(fill, x0), *dst, a);
+            *dst = op(_pixel<PixelType>(fill, x0), *dst, a);
             rx += radial->a11;
             ry += radial->a21;
         }
@@ -440,7 +440,7 @@ void fillRadial(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
         _calculateCoefficients(fill, x, y, b, deltaB, det, deltaDet, deltaDeltaDet);
 
         for (uint32_t i = 0; i < len; ++i, ++dst) {
-            *dst = op(_pixel<PIXEL_TYPE>(fill, sqrtf(det) - b), *dst, a);
+            *dst = op(_pixel<PixelType>(fill, sqrtf(det) - b), *dst, a);
             det += deltaDet;
             deltaDet += deltaDeltaDet;
             b += deltaB;
@@ -457,7 +457,7 @@ void fillRadial(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32
         auto ry = (x + 0.5f) * radial->a21 + (y + 0.5f) * radial->a22 + radial->a23 - radial->fy;
         for (uint32_t i = 0 ; i < len ; ++i, ++dst) {
             auto x0 = 0.5f * (rx * rx + ry * ry - radial->fr * radial->fr) / (radial->dr * radial->fr + rx * radial->dx + ry * radial->dy);
-            auto src = MULTIPLY(a, A(_pixel<PIXEL_TYPE>(fill, x0)));
+            auto src = MULTIPLY(a, A(_pixel<PixelType>(fill, x0)));
             *dst = maskOp(src, *dst, ~src);
             rx += radial->a11;
             ry += radial->a21;
@@ -467,7 +467,7 @@ void fillRadial(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32
         _calculateCoefficients(fill, x, y, b, deltaB, det, deltaDet, deltaDeltaDet);
 
         for (uint32_t i = 0 ; i < len ; ++i, ++dst) {
-            auto src = MULTIPLY(a, A(_pixel<PIXEL_TYPE>(fill, sqrtf(det) - b)));
+            auto src = MULTIPLY(a, A(_pixel<PixelType>(fill, sqrtf(det) - b)));
             *dst = maskOp(src, *dst, ~src);
             det += deltaDet;
             deltaDet += deltaDeltaDet;
@@ -485,7 +485,7 @@ void fillRadial(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32
         auto ry = (x + 0.5f) * radial->a21 + (y + 0.5f) * radial->a22 + radial->a23 - radial->fy;
         for (uint32_t i = 0 ; i < len ; ++i, ++dst, ++cmp) {
             auto x0 = 0.5f * (rx * rx + ry * ry - radial->fr * radial->fr) / (radial->dr * radial->fr + rx * radial->dx + ry * radial->dy);
-            auto src = MULTIPLY(A(_pixel<PIXEL_TYPE>(fill, x0)), a);
+            auto src = MULTIPLY(A(_pixel<PixelType>(fill, x0)), a);
             auto tmp = maskOp(src, *cmp, 0);
             *dst = tmp + MULTIPLY(*dst, ~tmp);
             rx += radial->a11;
@@ -496,7 +496,7 @@ void fillRadial(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32
         _calculateCoefficients(fill, x, y, b, deltaB, det, deltaDet, deltaDeltaDet);
 
         for (uint32_t i = 0 ; i < len ; ++i, ++dst, ++cmp) {
-            auto src = MULTIPLY(A(_pixel<PIXEL_TYPE>(fill, sqrtf(det))), a);
+            auto src = MULTIPLY(A(_pixel<PixelType>(fill, sqrtf(det))), a);
             auto tmp = maskOp(src, *cmp, 0);
             *dst = tmp + MULTIPLY(*dst, ~tmp);
             det += deltaDet;
@@ -507,7 +507,7 @@ void fillRadial(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32
 }
 
 
-void fillRadial(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PIXEL_TYPE> op, SwBlender<PIXEL_TYPE> op2, uint8_t a)
+void fillRadial(const SwFill* fill, PixelType* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PixelType> op, SwBlender<PixelType> op2, uint8_t a)
 {
     if (fill->radial.a < RADIAL_A_THRESHOLD) {
         auto radial = &fill->radial;
@@ -517,7 +517,7 @@ void fillRadial(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
         if (a == 255) {
             for (uint32_t i = 0; i < len; ++i, ++dst) {
                 auto x0 = 0.5f * (rx * rx + ry * ry - radial->fr * radial->fr) / (radial->dr * radial->fr + rx * radial->dx + ry * radial->dy);
-                PIXEL_TYPE tmp = op(_pixel<PIXEL_TYPE>(fill, x0), *dst, 255);
+                PixelType tmp = op(_pixel<PixelType>(fill, x0), *dst, 255);
                 *dst = op2(tmp, *dst, 255);
                 rx += radial->a11;
                 ry += radial->a21;
@@ -525,8 +525,8 @@ void fillRadial(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
         } else {
             for (uint32_t i = 0; i < len; ++i, ++dst) {
                 auto x0 = 0.5f * (rx * rx + ry * ry - radial->fr * radial->fr) / (radial->dr * radial->fr + rx * radial->dx + ry * radial->dy);
-                PIXEL_TYPE tmp = op(_pixel<PIXEL_TYPE>(fill, x0), *dst, 255);
-                PIXEL_TYPE tmp2 = op2(tmp, *dst, 255);
+                PixelType tmp = op(_pixel<PixelType>(fill, x0), *dst, 255);
+                PixelType tmp2 = op2(tmp, *dst, 255);
                 *dst = INTERPOLATE(tmp2, *dst, a);
                 rx += radial->a11;
                 ry += radial->a21;
@@ -537,7 +537,7 @@ void fillRadial(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
         _calculateCoefficients(fill, x, y, b, deltaB, det, deltaDet, deltaDeltaDet);
         if (a == 255) {
             for (uint32_t i = 0 ; i < len ; ++i, ++dst) {
-                PIXEL_TYPE tmp = op(_pixel<PIXEL_TYPE>(fill, sqrtf(det) - b), *dst, 255);
+                PixelType tmp = op(_pixel<PixelType>(fill, sqrtf(det) - b), *dst, 255);
                 *dst = op2(tmp, *dst, 255);
                 det += deltaDet;
                 deltaDet += deltaDeltaDet;
@@ -545,8 +545,8 @@ void fillRadial(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
             }
         } else {
             for (uint32_t i = 0 ; i < len ; ++i, ++dst) {
-                PIXEL_TYPE tmp = op(_pixel<PIXEL_TYPE>(fill, sqrtf(det) - b), *dst, 255);
-                PIXEL_TYPE tmp2 = op2(tmp, *dst, 255);
+                PixelType tmp = op(_pixel<PixelType>(fill, sqrtf(det) - b), *dst, 255);
+                PixelType tmp2 = op2(tmp, *dst, 255);
                 *dst = INTERPOLATE(tmp2, *dst, a);
                 det += deltaDet;
                 deltaDet += deltaDeltaDet;
@@ -557,7 +557,7 @@ void fillRadial(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
 }
 
 
-void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwAlpha alpha, uint8_t csize, uint8_t opacity)
+void fillLinear(const SwFill* fill, PixelType* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwAlpha alpha, uint8_t csize, uint8_t opacity)
 {
     //Rotation
     float rx = x + 0.5f;
@@ -567,9 +567,9 @@ void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
 
     if (opacity == 255) {
         if (tvg::zero(inc)) {
-            PIXEL_TYPE color = _fixedPixel<PIXEL_TYPE>(fill, static_cast<int32_t>(t * FIXPT_SIZE));
+            PixelType color = _fixedPixel<PixelType>(fill, static_cast<int32_t>(t * FIXPT_SIZE));
             for (uint32_t i = 0; i < len; ++i, ++dst, cmp += csize) {
-                *dst = opBlendNormal<PIXEL_TYPE>(color, *dst, alpha(cmp));
+                *dst = opBlendNormal<PixelType>(color, *dst, alpha(cmp));
             }
             return;
         }
@@ -583,14 +583,14 @@ void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
             auto t2 = static_cast<int32_t>(t * FIXPT_SIZE);
             auto inc2 = static_cast<int32_t>(inc * FIXPT_SIZE);
             for (uint32_t j = 0; j < len; ++j, ++dst, cmp += csize) {
-                *dst = opBlendNormal<PIXEL_TYPE>(_fixedPixel<PIXEL_TYPE>(fill, t2), *dst, alpha(cmp));
+                *dst = opBlendNormal<PixelType>(_fixedPixel<PixelType>(fill, t2), *dst, alpha(cmp));
                 t2 += inc2;
             }
         //we have to fallback to float math
         } else {
             uint32_t counter = 0;
             while (counter++ < len) {
-                *dst = opBlendNormal<PIXEL_TYPE>(_pixel<PIXEL_TYPE>(fill, t / GRADIENT_STOP_SIZE), *dst, alpha(cmp));
+                *dst = opBlendNormal<PixelType>(_pixel<PixelType>(fill, t / GRADIENT_STOP_SIZE), *dst, alpha(cmp));
                 ++dst;
                 t += inc;
                 cmp += csize;
@@ -598,9 +598,9 @@ void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
         }
     } else {
         if (tvg::zero(inc)) {
-            PIXEL_TYPE color = _fixedPixel<PIXEL_TYPE>(fill, static_cast<int32_t>(t * FIXPT_SIZE));
+            PixelType color = _fixedPixel<PixelType>(fill, static_cast<int32_t>(t * FIXPT_SIZE));
             for (uint32_t i = 0; i < len; ++i, ++dst, cmp += csize) {
-                *dst = opBlendNormal<PIXEL_TYPE>(color, *dst, MULTIPLY(alpha(cmp), opacity));
+                *dst = opBlendNormal<PixelType>(color, *dst, MULTIPLY(alpha(cmp), opacity));
             }
             return;
         }
@@ -614,14 +614,14 @@ void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
             auto t2 = static_cast<int32_t>(t * FIXPT_SIZE);
             auto inc2 = static_cast<int32_t>(inc * FIXPT_SIZE);
             for (uint32_t j = 0; j < len; ++j, ++dst, cmp += csize) {
-                *dst = opBlendNormal<PIXEL_TYPE>(_fixedPixel<PIXEL_TYPE>(fill, t2), *dst, MULTIPLY(alpha(cmp), opacity));
+                *dst = opBlendNormal<PixelType>(_fixedPixel<PixelType>(fill, t2), *dst, MULTIPLY(alpha(cmp), opacity));
                 t2 += inc2;
             }
         //we have to fallback to float math
         } else {
             uint32_t counter = 0;
             while (counter++ < len) {
-                *dst = opBlendNormal<PIXEL_TYPE>(_pixel<PIXEL_TYPE>(fill, t / GRADIENT_STOP_SIZE), *dst, MULTIPLY(opacity, alpha(cmp)));
+                *dst = opBlendNormal<PixelType>(_pixel<PixelType>(fill, t / GRADIENT_STOP_SIZE), *dst, MULTIPLY(opacity, alpha(cmp)));
                 ++dst;
                 t += inc;
                 cmp += csize;
@@ -640,7 +640,7 @@ void fillLinear(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32
     float inc = (fill->linear.dx) * (GRADIENT_STOP_SIZE - 1);
 
     if (tvg::zero(inc)) {
-        auto src = MULTIPLY(a, A(_fixedPixel<PIXEL_TYPE>(fill, static_cast<int32_t>(t * FIXPT_SIZE))));
+        auto src = MULTIPLY(a, A(_fixedPixel<PixelType>(fill, static_cast<int32_t>(t * FIXPT_SIZE))));
         for (uint32_t i = 0; i < len; ++i, ++dst) {
             *dst = maskOp(src, *dst, ~src);
         }
@@ -656,7 +656,7 @@ void fillLinear(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32
         auto t2 = static_cast<int32_t>(t * FIXPT_SIZE);
         auto inc2 = static_cast<int32_t>(inc * FIXPT_SIZE);
         for (uint32_t j = 0; j < len; ++j, ++dst) {
-            auto src = MULTIPLY(A(_fixedPixel<PIXEL_TYPE>(fill, t2)), a);
+            auto src = MULTIPLY(A(_fixedPixel<PixelType>(fill, t2)), a);
             *dst = maskOp(src, *dst, ~src);
             t2 += inc2;
         }
@@ -664,7 +664,7 @@ void fillLinear(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32
     } else {
         uint32_t counter = 0;
         while (counter++ < len) {
-            auto src = MULTIPLY(A(_pixel<PIXEL_TYPE>(fill, t / GRADIENT_STOP_SIZE)), a);
+            auto src = MULTIPLY(A(_pixel<PixelType>(fill, t / GRADIENT_STOP_SIZE)), a);
             *dst = maskOp(src, *dst, ~src);
             ++dst;
             t += inc;
@@ -682,7 +682,7 @@ void fillLinear(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32
     float inc = (fill->linear.dx) * (GRADIENT_STOP_SIZE - 1);
 
     if (tvg::zero(inc)) {
-        auto src = A(_fixedPixel<PIXEL_TYPE>(fill, static_cast<int32_t>(t * FIXPT_SIZE)));
+        auto src = A(_fixedPixel<PixelType>(fill, static_cast<int32_t>(t * FIXPT_SIZE)));
         src = MULTIPLY(src, a);
         for (uint32_t i = 0; i < len; ++i, ++dst, ++cmp) {
             auto tmp = maskOp(src, *cmp, 0);
@@ -700,7 +700,7 @@ void fillLinear(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32
         auto t2 = static_cast<int32_t>(t * FIXPT_SIZE);
         auto inc2 = static_cast<int32_t>(inc * FIXPT_SIZE);
         for (uint32_t j = 0; j < len; ++j, ++dst, ++cmp) {
-            auto src = MULTIPLY(a, A(_fixedPixel<PIXEL_TYPE>(fill, t2)));
+            auto src = MULTIPLY(a, A(_fixedPixel<PixelType>(fill, t2)));
             auto tmp = maskOp(src, *cmp, 0);
             *dst = tmp + MULTIPLY(*dst, ~tmp);
             t2 += inc2;
@@ -709,7 +709,7 @@ void fillLinear(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32
     } else {
         uint32_t counter = 0;
         while (counter++ < len) {
-            auto src = MULTIPLY(A(_pixel<PIXEL_TYPE>(fill, t / GRADIENT_STOP_SIZE)), a);
+            auto src = MULTIPLY(A(_pixel<PixelType>(fill, t / GRADIENT_STOP_SIZE)), a);
             auto tmp = maskOp(src, *cmp, 0);
             *dst = tmp + MULTIPLY(*dst, ~tmp);
             ++dst;
@@ -720,7 +720,7 @@ void fillLinear(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32
 }
 
 
-void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PIXEL_TYPE> op, uint8_t a)
+void fillLinear(const SwFill* fill, PixelType* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PixelType> op, uint8_t a)
 {
     //Rotation
     float rx = x + 0.5f;
@@ -729,7 +729,7 @@ void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
     float inc = (fill->linear.dx) * (GRADIENT_STOP_SIZE - 1);
 
     if (tvg::zero(inc)) {
-        PIXEL_TYPE color = _fixedPixel<PIXEL_TYPE>(fill, static_cast<int16_t>(t * FIXPT_SIZE));
+        PixelType color = _fixedPixel<PixelType>(fill, static_cast<int16_t>(t * FIXPT_SIZE));
         for (uint32_t i = 0; i < len; ++i, ++dst) {
             *dst = op(color, *dst, a);
         }
@@ -745,14 +745,14 @@ void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
         auto t2 = static_cast<int32_t>(t * FIXPT_SIZE);
         auto inc2 = static_cast<int32_t>(inc * FIXPT_SIZE);
         for (uint32_t j = 0; j < len; ++j, ++dst) {
-            *dst = op(_fixedPixel<PIXEL_TYPE>(fill, t2), *dst, a);
+            *dst = op(_fixedPixel<PixelType>(fill, t2), *dst, a);
             t2 += inc2;
         }
     //we have to fallback to float math
     } else {
         uint32_t counter = 0;
         while (counter++ < len) {
-            *dst = op(_pixel<PIXEL_TYPE>(fill, t / GRADIENT_STOP_SIZE), *dst, a);
+            *dst = op(_pixel<PixelType>(fill, t / GRADIENT_STOP_SIZE), *dst, a);
             ++dst;
             t += inc;
         }
@@ -760,7 +760,7 @@ void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
 }
 
 
-void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PIXEL_TYPE> op, SwBlender<PIXEL_TYPE> op2, uint8_t a)
+void fillLinear(const SwFill* fill, PixelType* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender<PixelType> op, SwBlender<PixelType> op2, uint8_t a)
 {
     //Rotation
     float rx = x + 0.5f;
@@ -769,16 +769,16 @@ void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
     float inc = (fill->linear.dx) * (GRADIENT_STOP_SIZE - 1);
 
     if (tvg::zero(inc)) {
-        PIXEL_TYPE color = _fixedPixel<PIXEL_TYPE>(fill, static_cast<int32_t>(t * FIXPT_SIZE));
+        PixelType color = _fixedPixel<PixelType>(fill, static_cast<int32_t>(t * FIXPT_SIZE));
         if (a == 255) {
             for (uint32_t i = 0; i < len; ++i, ++dst) {
-                PIXEL_TYPE tmp = op(color, *dst, a);
+                PixelType tmp = op(color, *dst, a);
                 *dst = op2(tmp, *dst, 255);
             }
         } else {
             for (uint32_t i = 0; i < len; ++i, ++dst) {
-                PIXEL_TYPE tmp = op(color, *dst, a);
-                PIXEL_TYPE tmp2 = op2(tmp, *dst, 255);
+                PixelType tmp = op(color, *dst, a);
+                PixelType tmp2 = op2(tmp, *dst, 255);
                 *dst = INTERPOLATE(tmp2, *dst, a);
             }
         }
@@ -795,7 +795,7 @@ void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
             auto t2 = static_cast<int32_t>(t * FIXPT_SIZE);
             auto inc2 = static_cast<int32_t>(inc * FIXPT_SIZE);
             for (uint32_t j = 0; j < len; ++j, ++dst) {
-                PIXEL_TYPE tmp = op(_fixedPixel<PIXEL_TYPE>(fill, t2), *dst, 255);
+                PixelType tmp = op(_fixedPixel<PixelType>(fill, t2), *dst, 255);
                 *dst = op2(tmp, *dst, 255);
                 t2 += inc2;
             }
@@ -803,7 +803,7 @@ void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
         } else {
             uint32_t counter = 0;
             while (counter++ < len) {
-                PIXEL_TYPE tmp = op(_pixel<PIXEL_TYPE>(fill, t / GRADIENT_STOP_SIZE), *dst, 255);
+                PixelType tmp = op(_pixel<PixelType>(fill, t / GRADIENT_STOP_SIZE), *dst, 255);
                 *dst = op2(tmp, *dst, 255);
                 ++dst;
                 t += inc;
@@ -815,8 +815,8 @@ void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
             auto t2 = static_cast<int32_t>(t * FIXPT_SIZE);
             auto inc2 = static_cast<int32_t>(inc * FIXPT_SIZE);
             for (uint32_t j = 0; j < len; ++j, ++dst) {
-                PIXEL_TYPE tmp = op(_fixedPixel<PIXEL_TYPE>(fill, t2), *dst, 255);
-                PIXEL_TYPE tmp2 = op2(tmp, *dst, 255);
+                PixelType tmp = op(_fixedPixel<PixelType>(fill, t2), *dst, 255);
+                PixelType tmp2 = op2(tmp, *dst, 255);
                 *dst = INTERPOLATE(tmp2, *dst, a);
                 t2 += inc2;
             }
@@ -824,8 +824,8 @@ void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
         } else {
             uint32_t counter = 0;
             while (counter++ < len) {
-                PIXEL_TYPE tmp = op(_pixel<PIXEL_TYPE>(fill, t / GRADIENT_STOP_SIZE), *dst, 255);
-                PIXEL_TYPE tmp2 = op2(tmp, *dst, 255);
+                PixelType tmp = op(_pixel<PixelType>(fill, t / GRADIENT_STOP_SIZE), *dst, 255);
+                PixelType tmp2 = op2(tmp, *dst, 255);
                 *dst = INTERPOLATE(tmp2, *dst, a);
                 ++dst;
                 t += inc;
@@ -835,7 +835,7 @@ void fillLinear(const SwFill* fill, PIXEL_TYPE* dst, uint32_t y, uint32_t x, uin
 }
 
 
-bool fillGenColorTable(SwFill* fill, const Fill* fdata, const Matrix& transform, SwSurface<PIXEL_TYPE>* surface, uint8_t opacity, bool ctable)
+bool fillGenColorTable(SwFill* fill, const Fill* fdata, const Matrix& transform, SwSurface<PixelType>* surface, uint8_t opacity, bool ctable)
 {
     if (!fill) return false;
 
@@ -847,7 +847,7 @@ bool fillGenColorTable(SwFill* fill, const Fill* fdata, const Matrix& transform,
         if (!_prepareRadial(fill, static_cast<const RadialGradient*>(fdata), transform)) return false;
     }
 
-    if (ctable) return _updateColorTable<PIXEL_TYPE>(fill, fdata, surface, opacity);
+    if (ctable) return _updateColorTable<PixelType>(fill, fdata, surface, opacity);
     return true;
 }
 
