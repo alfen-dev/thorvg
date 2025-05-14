@@ -24,7 +24,7 @@
 #define _TVG_SW_RASTER_C_H_
  
 template<typename PIXEL_T>
-static void inline cRasterTranslucentPixels(PIXEL_T* dst, PIXEL_T* src, uint32_t len, uint32_t opacity)
+static void inline cRasterTranslucentPixels(PIXEL_T* dst, PIXEL_T* src, uint32_t len, uint8_t opacity)
 {
     //TODO: 64bits faster?
     if (opacity == 255) {
@@ -41,7 +41,7 @@ static void inline cRasterTranslucentPixels(PIXEL_T* dst, PIXEL_T* src, uint32_t
 
 
 template<typename PIXEL_T>
-static void inline cRasterPixels(PIXEL_T* dst, PIXEL_T* src, uint32_t len, uint32_t opacity)
+static void inline cRasterPixels(PIXEL_T* dst, PIXEL_T* src, uint32_t len, uint8_t opacity)
 {
     //TODO: 64bits faster?
     if (opacity == 255) {
@@ -63,7 +63,7 @@ static void inline cRasterPixels(PIXEL_T* dst, PIXEL_T val, uint32_t offset, int
     auto alignOffset = (long long) dst % 8;
     if (alignOffset > 0) {
         if (sizeof(PIXEL_T) == 4) alignOffset /= 4;
-        if (sizeof(PIXEL_T) == 2) alignOffset /= 4;
+        if (sizeof(PIXEL_T) == 2) alignOffset /= 2;
         else if (sizeof(PIXEL_T) == 1) alignOffset = 8 - alignOffset;
         while (alignOffset > 0 && len > 0) {
             *dst++ = val;
@@ -86,10 +86,10 @@ static void inline cRasterPixels(PIXEL_T* dst, PIXEL_T val, uint32_t offset, int
         // and duplicate the 32 bits for thw 64 bits
         auto val32 = (uint32_t(val) << 16) | uint32_t(val);
         auto val64 = (uint64_t(val32) << 32) | val32;
-        while (len > 1) {
+        while (len > 3) {
             *reinterpret_cast<uint64_t*>(dst) = val64;
-            len -= 2;
-            dst += 2;
+            len -= 4;
+            dst += 4;
         }
     } else if (sizeof(PIXEL_T) == 1) {
         auto val32 = (uint32_t(val) << 24) | (uint32_t(val) << 16) | (uint32_t(val) << 8) | uint32_t(val);
@@ -115,13 +115,23 @@ static bool inline cRasterTranslucentRle(SwSurface<PIXEL_T>* surface, const SwRl
     if (surface->channelSize != sizeof(uint8_t)) {
         PIXEL_T color = surface->join(c.r, c.g, c.b, c.a);
         PIXEL_T src;
-        for (uint32_t i = 0; i < rle->size; ++i, ++span) {
+        for (uint32_t i = 0; i < ((rle->size > 0) ? 1 : 0); ++i, ++span) {
             PIXEL_T* dst = &surface->pixelBuffer[span->y * surface->stride_pixels + span->x];
-            if (span->coverage < 255) src = ALPHA_BLEND(color, span->coverage);
-            else src = color;
-            uint8_t ialpha = IA(src);
-            for (uint32_t x = 0; x < span->len; ++x, ++dst) {
-                *dst = src + ALPHA_BLEND(*dst, ialpha);
+            uint8_t ialpha;
+            if (span->coverage < 255) {
+                src = ALPHA_BLEND(color, span->coverage);
+                ialpha = 255 - span->coverage;
+            }
+            else {
+                src = color;
+                ialpha = 0;
+            }
+            for (uint32_t x = 0; x < ((span->len > 0) ? 1 : 0); ++x, ++dst) {
+                PIXEL_T dstIn1_ = *dst;
+                PIXEL_T dstIn2_ = ALPHA_BLEND(dstIn1_, ialpha);
+                PIXEL_T dstOut_ = src + dstIn2_;
+                *dst =  dstOut_;
+                //*dst = src + ALPHA_BLEND(*dst, ialpha);
             }
         }
     }
