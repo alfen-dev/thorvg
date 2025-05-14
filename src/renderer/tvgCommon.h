@@ -34,7 +34,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-#include "config.h"
+#include "tvg_config.h"
 #include "thorvg.h"
 
 using namespace std;

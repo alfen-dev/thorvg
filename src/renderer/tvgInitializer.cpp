@@ -25,15 +25,15 @@
 #include "tvgLoader.h"
 
 #ifdef THORVG_SW_RASTER_SUPPORT
-    #include "tvgSwRenderer.h"
+    #include "sw_engine/tvgSwRenderer.h"
 #endif
 
 #ifdef THORVG_GL_RASTER_SUPPORT
-    #include "tvgGlRenderer.h"
+    #include "gl_engine/tvgGlRenderer.h"
 #endif
 
 #ifdef THORVG_WG_RASTER_SUPPORT
-    #include "tvgWgRenderer.h"
+    #include "wg_engine/tvgWgRenderer.h"
 #endif
 
 

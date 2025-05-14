@@ -26,7 +26,6 @@
 #include "tvgCommon.h"
 #include "tvgMath.h"
 #include "tvgRender.h"
-#include "lv_assert.h"
 
 #define SW_CURVE_TYPE_POINT 0
 #define SW_CURVE_TYPE_CUBIC 1
@@ -311,7 +310,6 @@ inline PIXEL_T JOIN(uint8_t c0, uint8_t c1, uint8_t c2, uint8_t c3);
 
 static inline uint32_t ALPHA_BLEND(uint32_t c, uint8_t a)
 {
-    LV_ASSERT(false);
     ++a;
     return (((((c >> 8) & 0x00ff00ff) * a) & 0xff00ff00) + ((((c & 0x00ff00ff) * a) >> 8) & 0x00ff00ff));
 }
@@ -324,7 +322,6 @@ static inline uint32_t ALPHA_BLEND(uint32_t c, uint8_t a)
 #define MAX_ALPHA        64 // 6bits+1 with rounding
 
 static inline uint16_t ALPHA_BLEND( uint16_t c, uint8_t alpha ){
-    LV_ASSERT(true);
   // alpha for foreground multiplication
   // convert from 8bit to (6bit+1) with rounding
   // will be in [0..64] inclusive
@@ -341,7 +338,6 @@ static inline uint16_t ALPHA_BLEND( uint16_t c, uint8_t alpha ){
 
 static inline uint32_t INTERPOLATE(uint32_t s, uint32_t d, uint8_t a)
 {
-    LV_ASSERT(false);
     return (((((((s >> 8) & 0xff00ff) - ((d >> 8) & 0xff00ff)) * a) + (d & 0xff00ff00)) & 0xff00ff00) + ((((((s & 0xff00ff) - (d & 0xff00ff)) * a) >> 8) + (d & 0xff00ff)) & 0xff00ff));
 }
 

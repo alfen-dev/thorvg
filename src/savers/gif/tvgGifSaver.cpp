@@ -39,7 +39,7 @@ void GifSaver::run(unsigned tid)
     auto h = static_cast<uint32_t>(vsize[1]);
 
     buffer = tvg::realloc<uint32_t*>(buffer, sizeof(uint32_t) * w * h);
-    canvas->target(buffer, w, w, h, ColorSpace::ABGR8888S);
+    canvas->target(buffer, 0, 0, w, w, h, ColorSpace::ABGR8888S);
     canvas->push(bg);
     bg = nullptr;
 

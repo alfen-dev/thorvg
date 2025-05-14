@@ -93,7 +93,7 @@ void WgRenderer::clearTargets()
     if (surface) wgpuSurfaceUnconfigure(surface);
     targetTexture = nullptr;
     surface = nullptr;
-    mTargetSurface.stride = 0;
+    mTargetSurface.stride_pixels = 0;
     mTargetSurface.w = 0;
     mTargetSurface.h = 0;
 
@@ -377,7 +377,7 @@ bool WgRenderer::target(WGPUDevice device, WGPUInstance instance, void* target, 
         mCompositor.initialize(mContext, width, height);
 
         // store target properties
-        mTargetSurface.stride = width;
+        mTargetSurface.stride_pixels = width;
         mTargetSurface.w = width;
         mTargetSurface.h = height;
 
@@ -401,7 +401,7 @@ bool WgRenderer::target(WGPUDevice device, WGPUInstance instance, void* target, 
         mCompositor.resize(mContext, width, height);
 
         // store target properties
-        mTargetSurface.stride = width;
+        mTargetSurface.stride_pixels = width;
         mTargetSurface.w = width;
         mTargetSurface.h = height;
 

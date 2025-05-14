@@ -468,7 +468,7 @@ void LottieParser::registerSlot(LottieObject* obj, const char* sid, LottieProper
     //append object if the slot already exists.
     ARRAY_FOREACH(p, comp->slots) {
         if (strcmp((*p)->sid, sid)) continue;
-        (*p)->pairs.push({obj});
+        (*p)->pairs.push({obj, NULL});
         return;
     }
     comp->slots.push(new LottieSlot(context.layer, context.parent, duplicate(sid), obj, type));

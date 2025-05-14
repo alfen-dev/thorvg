@@ -43,7 +43,7 @@ void WebpLoader::run(unsigned tid)
         surface.cs = ColorSpace::ABGR8888;
     }
 
-    surface.stride = static_cast<uint32_t>(w);
+    surface.stride_pixels = static_cast<uint32_t>(w);
     surface.w = static_cast<uint32_t>(w);
     surface.h = static_cast<uint32_t>(h);
     surface.channelSize = sizeof(uint32_t);

@@ -825,7 +825,7 @@ bool GlRenderer::target(void* context, int32_t id, uint32_t w, uint32_t h)
 
     flush();
 
-    surface.stride = w;
+    surface.stride_pixels = w;
     surface.w = w;
     surface.h = h;
 

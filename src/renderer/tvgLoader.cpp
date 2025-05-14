@@ -27,30 +27,30 @@
 #include "tvgLock.h"
 
 #ifdef THORVG_SVG_LOADER_SUPPORT
-    #include "tvgSvgLoader.h"
+    #include "../svg/tvgSvgLoader.h"
 #endif
 
 #ifdef THORVG_PNG_LOADER_SUPPORT
-    #include "tvgPngLoader.h"
+    #include "../png/tvgPngLoader.h"
 #endif
 
 #ifdef THORVG_JPG_LOADER_SUPPORT
-    #include "tvgJpgLoader.h"
+    #include "../jpg/tvgJpgLoader.h"
 #endif
 
 #ifdef THORVG_WEBP_LOADER_SUPPORT
-    #include "tvgWebpLoader.h"
+    #include "../webp/tvgWebpLoader.h"
 #endif
 
 #ifdef THORVG_TTF_LOADER_SUPPORT
-    #include "tvgTtfLoader.h"
+    #include "../ttf/tvgTtfLoader.h"
 #endif
 
 #ifdef THORVG_LOTTIE_LOADER_SUPPORT
-    #include "tvgLottieLoader.h"
+    #include "../lottie/tvgLottieLoader.h"
 #endif
 
-#include "tvgRawLoader.h"
+#include "../raw/tvgRawLoader.h"
 
 
 uintptr_t HASH_KEY(const char* data)

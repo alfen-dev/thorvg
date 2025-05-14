@@ -151,7 +151,7 @@ bool JpgLoader::read()
 
     //setup the surface
     surface.buf8 = image;
-    surface.stride = w;
+    surface.stride_pixels = w;
     surface.w = w;
     surface.h = h;
     surface.channelSize = sizeof(uint32_t);

@@ -1271,8 +1271,8 @@ void LottieBuilder::updateStrokeEffect(LottieLayer* layer, LottieFxStroke* effec
         }
     //A specific mask
     } else {
-        auto idx = static_cast<uint32_t>(effect->mask(frameNo) - 1);
-        if (idx < 0 || idx >= layer->masks.count) return;
+        auto idx = static_cast<int32_t>(effect->mask(frameNo) - 1);
+        if (idx < 0 || static_cast<uint32_t>(idx) >= layer->masks.count) return;
         layer->masks[idx]->pathset(frameNo, SHAPE(shape)->rs.path, nullptr, tween, exps);
     }
 

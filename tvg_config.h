@@ -22,16 +22,15 @@
 
 #define THORVG_LOG_ENABLED 1
 
+// PIXEL_TYPE, PIXEL_SIZE, and PIXEL_SIZE_SHIFT are now set in (c)make file
+
 // for framebuffer check 'fbset' linux console command
 // Define pixel type and update related _TYPE and _SHIFT
-#define PIXEL_TYPE uint16_t
-#ifdef __cplusplus
-using PixelType = PIXEL_TYPE;
-#endif
+//#define PIXEL_TYPE uint16_t
 // size of PixelType in BYTES
-#define PIXEL_TYPE_SIZE 2
+//#define PIXEL_TYPE_SIZE 2
 // (a << PIXEL_SIZE_SHIFT) equals (a * PIXEL_TYPE_SIZE)
-#define PIXEL_SIZE_SHIFT 1
+//#define PIXEL_SIZE_SHIFT 1
 
 //#define PIXEL_TYPE uint32_t
 //#define PIXEL_TYPE_SIZE 4
@@ -40,6 +39,10 @@ using PixelType = PIXEL_TYPE;
 //#define PIXEL_TYPE uint16_t
 //#define PIXEL_TYPE_SIZE 2
 //#define PIXEL_SIZE_SHIFT 1
+
+#ifdef __cplusplus
+using PixelType = PIXEL_TYPE;
+#endif
 
 #include "lvgl/src/misc/lv_assert.h"
 #define RAPIDJSON_ASSERT(x) LV_ASSERT(x)

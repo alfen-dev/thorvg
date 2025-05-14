@@ -103,7 +103,7 @@ bool PngLoader::read()
 
     //setup the surface
     surface.buf32 = reinterpret_cast<uint32_t*>(buffer);
-    surface.stride = (uint32_t)w;
+    surface.stride_pixels = (uint32_t)w;
     surface.w = (uint32_t)w;
     surface.h = (uint32_t)h;
     surface.channelSize = sizeof(uint32_t);

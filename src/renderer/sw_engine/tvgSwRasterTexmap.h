@@ -35,7 +35,7 @@ struct AALine
 {
    int32_t x[2];
    PixelType coverage[2];
-   PixelType length[2];
+   int32_t length[2];
 };
 
 struct AASpans

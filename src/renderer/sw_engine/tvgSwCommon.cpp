@@ -23,6 +23,5 @@
 #include "tvgSwCommon.h"
 #include "tvgMath.h"
 #include "tvgRender.h"
-#include "lv_assert.h"
 
 
