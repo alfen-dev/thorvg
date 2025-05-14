@@ -393,7 +393,6 @@ static inline SwCoord HALF_STROKE(float width)
 
 static inline uint8_t A(uint32_t c)
 {
-    LV_ASSERT(false);
     return ((c) >> 24);
 }
 
@@ -415,7 +414,6 @@ static inline uint8_t IA(uint16_t c)
 
 static inline uint8_t C1(uint32_t c)
 {
-    LV_ASSERT(false);
     return ((c) >> 16);
 }
 
@@ -450,6 +448,7 @@ static inline uint32_t SOLID_C(uint32_t color)
 {
     return (color | 0xff000000);
 }
+
 static inline uint16_t SOLID_C(uint16_t color)
 {
     return (color);
@@ -654,7 +653,7 @@ bool rasterShape(SwSurface<PixelType>* surface, SwShape* shape, RenderColor& c);
 bool rasterImage(SwSurface<PixelType>* surface, SwImage* image, const Matrix& transform, const SwBBox& bbox, uint8_t opacity);
 bool rasterStroke(SwSurface<PixelType>* surface, SwShape* shape, RenderColor& c);
 bool rasterGradientStroke(SwSurface<PixelType>* surface, SwShape* shape, const Fill* fdata, uint8_t opacity);
-bool rasterClear(SwSurface<PixelType>* surface, uint32_t x, uint32_t y, uint32_t w, uint32_t h, PixelType color = 0);
+bool rasterClear(SwSurface<PixelType>* surface, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t color = 0);
 
 void rasterPixel(uint32_t *dst, uint32_t val, uint32_t offset, int32_t len);
 void rasterPixel(uint16_t *dst, uint16_t val, uint32_t offset, int32_t len);
@@ -685,5 +684,8 @@ void effectTintUpdate(RenderEffectTint* effect);
 bool effectTint(SwCompositor* cmp, const RenderEffectTint* params, bool direct);
 void effectTritoneUpdate(RenderEffectTritone* effect);
 bool effectTritone(SwCompositor* cmp, const RenderEffectTritone* params, bool direct);
+
+void color32_to_color(uint32_t srcColor, uint32_t* dstColor);
+void color32_to_color(uint32_t srcColor, uint16_t* dstColor);
 
 #endif /* _TVG_SW_COMMON_H_ */

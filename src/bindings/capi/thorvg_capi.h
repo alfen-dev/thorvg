@@ -670,7 +670,7 @@ TVG_API Tvg_Result tvg_canvas_update_paint(Tvg_Canvas* canvas, Tvg_Paint* paint)
 // For 32 bit colors the value 0x00000000 as set by rasterClear is transparent
 // Incase of 16 bit color 0x0000 is black. 
 // Therefor a (none black) background color can be specified:
-TVG_API Tvg_Result tvg_canvas_draw(Tvg_Canvas* canvas, bool clear, PIXEL_TYPE color);
+TVG_API Tvg_Result tvg_canvas_draw(Tvg_Canvas* canvas, bool clear, uint32_t colorWithOpacity);
 
 
 /*!

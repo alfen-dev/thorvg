@@ -313,7 +313,7 @@ SwRenderer::~SwRenderer()
 }
 
 
-bool SwRenderer::clear(PixelType color)
+bool SwRenderer::clear(uint32_t colorWithOpacity)
 {
     uint8_t opacity = A(colorWithOpacity);
     bool translucent = (opacity < 255);

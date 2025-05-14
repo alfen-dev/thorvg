@@ -412,7 +412,7 @@ public:
     virtual ColorSpace colorSpace() = 0;
     virtual const RenderSurface* mainSurface() = 0;
 
-    virtual bool clear(PIXEL_TYPE color) = 0;
+    virtual bool clear(uint32_t colorWithOpacity) = 0;
     virtual bool sync() = 0;
 
     virtual RenderCompositor* target(const RenderRegion& region, ColorSpace cs, CompositionFlag flags) = 0;

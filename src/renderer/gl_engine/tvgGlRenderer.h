@@ -88,7 +88,7 @@ public:
 
     bool target(void* context, int32_t id, uint32_t w, uint32_t h);
     bool sync() override;
-    bool clear(PIXEL_TYPE color = 0) override;
+    bool clear(uint32_t colorWithOpacity = 0) override;
 
     RenderCompositor* target(const RenderRegion& region, ColorSpace cs, CompositionFlag flags) override;
     bool beginComposite(RenderCompositor* cmp, MaskMethod method, uint8_t opacity) override;

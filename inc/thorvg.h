@@ -745,7 +745,7 @@ public:
      *
      * @see Canvas::sync()
      */
-    Result draw(bool clear = false, PIXEL_TYPE color = 0) noexcept;
+    Result draw(bool clear = false, uint32_t color = 0) noexcept;
 
     /**
      * @brief Sets the drawing region in the canvas.

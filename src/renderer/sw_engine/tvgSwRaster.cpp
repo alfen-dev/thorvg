@@ -1930,3 +1930,17 @@ void rasterXYFlip(uint32_t* src, uint32_t* dst, int32_t stride, int32_t w, int32
         }
     }
 }
+
+void color32_to_color(uint32_t srcColor, uint32_t* dstColor)
+{
+    *dstColor = srcColor;
+}
+
+void color32_to_color(uint32_t srcColor, uint16_t* dstColor)
+{
+    uint8_t a = A(srcColor);
+    uint8_t r = C1(srcColor);
+    uint8_t g = C2(srcColor);
+    uint8_t b = C3(srcColor);
+    *dstColor = JOIN<uint16_t>(a, (uint8_t)r, (uint8_t)g, (uint8_t)b);
+}
