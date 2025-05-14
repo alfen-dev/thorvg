@@ -434,7 +434,8 @@ RAPIDJSON_NAMESPACE_END
 #ifndef RAPIDJSON_ASSERT
     //#include <cassert>
     //#define RAPIDJSON_ASSERT(x) assert(x)
-    #define RAPIDJSON_ASSERT(x)
+#include "tvg_config.h"
+    #define RAPIDJSON_ASSERT(x) TVG_ASSERT(x)
 #endif // RAPIDJSON_ASSERT
 
 ///////////////////////////////////////////////////////////////////////////////

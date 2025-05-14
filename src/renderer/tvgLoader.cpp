@@ -62,8 +62,11 @@ uintptr_t HASH_KEY(const char* data)
 /* Internal Class Implementation                                        */
 /************************************************************************/
 
-//TODO: remove it.
+#if PIXEL_TYPE_SIZE == 4
 atomic<ColorSpace> ImageLoader::cs{ColorSpace::ARGB8888};
+#elif PIXEL_TYPE_SIZE == 2
+atomic<ColorSpace> ImageLoader::cs{ColorSpace::RGB565};
+#endif        
 
 static Key _key;
 static Inlist<LoadModule> _activeLoaders;
@@ -378,7 +381,7 @@ LoadModule* LoaderMgr::loader(const char* data, uint32_t size, const char* mimeT
 }
 
 
-LoadModule* LoaderMgr::loader(const uint32_t *data, uint32_t w, uint32_t h, ColorSpace cs, bool copy)
+LoadModule* LoaderMgr::loader(const PIXEL_TYPE *data, uint32_t w, uint32_t h, ColorSpace cs, bool copy)
 {
     //Note that users could use the same data pointer with the different content.
     //Thus caching is only valid for shareable.
