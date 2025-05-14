@@ -84,7 +84,7 @@ struct Canvas::Impl
         return Result::Success;
     }
 
-    Result draw(bool clear, PIXEL_TYPE color)
+    Result draw(bool clear, uint32_t color)
     {
         if (status == Status::Drawing) return Result::InsufficientCondition;
 

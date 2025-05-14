@@ -313,10 +313,19 @@ SwRenderer::~SwRenderer()
 }
 
 
-bool SwRenderer::clear(PIXEL_TYPE color)
+bool SwRenderer::clear(uint32_t colorWithOpacity)
 {
-    if (surface) return rasterClear(surface, 0, 0, surface->w, surface->h, color);
-    return false;
+    uint8_t opacity = A(colorWithOpacity);
+    bool translucent = (opacity < 255);
+
+    bool result = true;
+		// Do not clear on pixels having no transparency (so 8/16 bit pixels) and when color is non solid
+    if (!translucent || (PIXEL_TYPE_SIZE == 4)) {
+        PIXEL_TYPE color;
+        color32_to_color(colorWithOpacity, &color);
+        result = rasterClear(surface, 0, 0, surface->w, surface->h, color);
+    }
+    return result;
 }
 
 
