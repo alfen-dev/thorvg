@@ -960,6 +960,7 @@ SwRle* rleRender(SwRle* rle, const SwOutline* outline, const SwBBox& renderRegio
 
 error:
     tvg::free(rw.rle);
+    TVGDBG("SW_ENGINE", "Not rendering object, maybe enlarge RENDER_POOL_SIZE_REDUCED");
     return nullptr;
 }
 
