@@ -25,15 +25,15 @@
 #include "tvgLoader.h"
 
 #ifdef THORVG_SW_RASTER_SUPPORT
-    #include "tvgSwRenderer.h"
+    #include "sw_engine/tvgSwRenderer.h"
 #endif
 
 #ifdef THORVG_GL_RASTER_SUPPORT
-    #include "tvgGlRenderer.h"
+    #include "gl_engine/tvgGlRenderer.h"
 #endif
 
 #ifdef THORVG_WG_RASTER_SUPPORT
-    #include "tvgWgRenderer.h"
+    #include "wg_engine/tvgWgRenderer.h"
 #endif
 
 
@@ -65,7 +65,7 @@ static bool _buildVersionInfo(uint32_t* major, uint32_t* minor, uint32_t* micro)
     uint32_t microVal = atoi(p);
 
     char sum[7];
-    snprintf(sum, sizeof(sum), "%d%02d%02d", majorVal, minorVal, microVal);
+    snprintf(sum, sizeof(sum), "%lu%02lu%02lu",  (unsigned long)majorVal,  (unsigned long)minorVal,  (unsigned long)microVal);
     _version = atoi(sum);
 
     if (major) *major = majorVal;

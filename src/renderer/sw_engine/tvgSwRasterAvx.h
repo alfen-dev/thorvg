@@ -99,13 +99,13 @@ static void avxRasterPixel32(uint32_t *dst, uint32_t val, uint32_t offset, int32
 }
 
 
-static bool avxRasterTranslucentRect(SwSurface* surface, const SwBBox& region, const RenderColor& c)
+static bool avxRasterTranslucentRect(SwSurface<PIXEL_T>* surface, const SwBBox& region, const RenderColor& c)
 {
     auto h = static_cast<uint32_t>(region.max.y - region.min.y);
     auto w = static_cast<uint32_t>(region.max.x - region.min.x);
 
-    //32bits channels
-    if (surface->channelSize == sizeof(uint32_t)) {
+    //16/32bits channels
+    if (surface->channelSize != sizeof(uint8_t)) {
         auto color = surface->join(c.r, c.g, c.b, c.a);
         auto buffer = surface->buf32 + (region.min.y * surface->stride) + region.min.x;
 
@@ -142,8 +142,9 @@ static bool avxRasterTranslucentRect(SwSurface* surface, const SwBBox& region, c
                 dst++;
             }
         }
-    //8bit grayscale
-    } else if (surface->channelSize == sizeof(uint8_t)) {
+    }
+    //8bits grayscale
+    else {
         TVGLOG("SW_ENGINE", "Require AVX Optimization, Channel Size = %d", surface->channelSize);
         auto buffer = surface->buf8 + (region.min.y * surface->stride) + region.min.x;
         auto ialpha = ~c.a;
@@ -158,12 +159,12 @@ static bool avxRasterTranslucentRect(SwSurface* surface, const SwBBox& region, c
 }
 
 
-static bool avxRasterTranslucentRle(SwSurface* surface, const SwRle* rle, const RenderColor& c)
+static bool avxRasterTranslucentRle(SwSurface<PIXEL_T>* surface, const SwRle* rle, const RenderColor& c)
 {
     auto span = rle->spans;
 
-    //32bit channels
-    if (surface->channelSize == sizeof(uint32_t)) {
+    //16/32bits channels
+    if (surface->channelSize != sizeof(uint8_t)) {
         auto color = surface->join(c.r, c.g, c.b, c.a);
         uint32_t src;
 
@@ -209,8 +210,9 @@ static bool avxRasterTranslucentRle(SwSurface* surface, const SwRle* rle, const 
 
             ++span;
         }
-    //8bit grayscale
-    } else if (surface->channelSize == sizeof(uint8_t)) {
+    }
+    //8bits grayscale
+    else {
         TVGLOG("SW_ENGINE", "Require AVX Optimization, Channel Size = %d", surface->channelSize);
         uint8_t src;
         for (uint32_t i = 0; i < rle->size; ++i, ++span) {

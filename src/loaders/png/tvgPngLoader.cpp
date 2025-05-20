@@ -41,7 +41,7 @@ void PngLoader::run(unsigned tid)
     }
 
     //setup the surface
-    surface.stride = width;
+    surface.stride_pixels = width;
     surface.w = width;
     surface.h = height;
     surface.cs = ColorSpace::ABGR8888S;

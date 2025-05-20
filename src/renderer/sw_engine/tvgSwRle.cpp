@@ -320,6 +320,7 @@ static void _horizLine(RleWorker& rw, SwCoord x, SwCoord y, SwCoord area, SwCoor
     }
 
     auto rle = rw.rle;
+    TVG_ASSERT_NULL(rle);
 
     if (!rw.antiAlias) coverage = 255;
 
@@ -339,9 +340,11 @@ static void _horizLine(RleWorker& rw, SwCoord x, SwCoord y, SwCoord area, SwCoor
     //span pool is full, grow it.
     if (rle->size >= rle->alloc) {
         auto newSize = (rle->size > 0) ? (rle->size * 2) : 256;
+        //newSize = rle->size + 128;
         if (rle->alloc < newSize) {
             rle->alloc = newSize;
             rle->spans = tvg::realloc<SwSpan*>(rle->spans, rle->alloc * sizeof(SwSpan));
+            TVG_ASSERT_NULL(rle->spans);
         }
     }
 
@@ -844,7 +847,11 @@ SwRle* rleRender(SwRle* rle, const SwOutline* outline, const SwBBox& renderRegio
 {
     if (!outline) return nullptr;
 
+#ifdef RENDER_POOL_SIZE_REDUCED
+    constexpr auto RENDER_POOL_SIZE = RENDER_POOL_SIZE_REDUCED;
+#else
     constexpr auto RENDER_POOL_SIZE = 16384L;
+#endif    
     constexpr auto BAND_SIZE = 40;
 
     //TODO: We can preserve several static workers in advance

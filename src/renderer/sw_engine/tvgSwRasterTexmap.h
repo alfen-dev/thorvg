@@ -34,7 +34,7 @@ struct Polygon
 struct AALine
 {
    int32_t x[2];
-   int32_t coverage[2];
+   PixelType coverage[2];
    int32_t length[2];
 };
 
@@ -71,27 +71,29 @@ static bool _arrange(const SwImage* image, const SwBBox* region, int& yStart, in
 }
 
 
-static bool _rasterMaskedPolygonImageSegment(SwSurface* surface, const SwImage* image, const SwBBox* region, int yStart, int yEnd, AASpans* aaSpans, uint8_t opacity, uint8_t dirFlag = 0)
+static bool _rasterMaskedPolygonImageSegment(SwSurface<PixelType>* surface, const SwImage* image, const SwBBox* region, int yStart, int yEnd, AASpans* aaSpans, uint8_t opacity, uint8_t dirFlag = 0)
 {
     TVGERR("SW_ENGINE", "TODO: _rasterMaskedPolygonImageSegment()");
     return false;
 }
 
 
-static void _rasterBlendingPolygonImageSegment(SwSurface* surface, const SwImage* image, const SwBBox* region, int yStart, int yEnd, AASpans* aaSpans, uint8_t opacity)
+static void _rasterBlendingPolygonImageSegment(SwSurface<PixelType>* surface, const SwImage* image, const SwBBox* region, int yStart, int yEnd, AASpans* aaSpans, uint8_t opacity)
 {
     float _dudx = dudx, _dvdx = dvdx;
     float _dxdya = dxdya, _dxdyb = dxdyb, _dudya = dudya, _dvdya = dvdya;
     float _xa = xa, _xb = xb, _ua = ua, _va = va;
-    auto sbuf = image->buf32;
-    auto dbuf = surface->buf32;
+    auto sbuf = image->pixelBuffer;
+    auto dbuf = surface->pixelBuffer;
     int32_t sw = static_cast<int32_t>(image->w);
     int32_t sh = static_cast<int32_t>(image->h);
-    int32_t x1, x2, x, y, ar, ab, iru, irv, px, ay;
+    int32_t x1, x2, x, y, iru, irv, ay;
+    uint8_t ar, ab;
+    PixelType px;
     int32_t vv = 0, uu = 0;
     int32_t minx = INT32_MAX, maxx = 0;
     float dx, u, v, iptr;
-    uint32_t* buf;
+    PixelType* buf;
     SwSpan* span = nullptr;         //used only when rle based.
 
     if (!_arrange(image, region, yStart, yEnd)) return;
@@ -143,7 +145,7 @@ static void _rasterBlendingPolygonImageSegment(SwSurface* surface, const SwImage
             u = _ua + dx * _dudx;
             v = _va + dx * _dvdx;
 
-            buf = dbuf + ((y * surface->stride) + x1);
+            buf = dbuf + ((y * surface->stride_pixels) + x1);
 
             x = x1;
 
@@ -159,27 +161,27 @@ static void _rasterBlendingPolygonImageSegment(SwSurface* surface, const SwImage
                 iru = uu + 1;
                 irv = vv + 1;
 
-                px = *(sbuf + (vv * image->stride) + uu);
+                px = *(sbuf + (vv * image->stride_pixels) + uu);
 
                 /* horizontal interpolate */
                 if (iru < sw) {
                     /* right pixel */
-                    int px2 = *(sbuf + (vv * image->stride) + iru);
+                    PixelType px2 = *(sbuf + (vv * image->stride_pixels) + iru);
                     px = INTERPOLATE(px, px2, ar);
                 }
                 /* vertical interpolate */
                 if (irv < sh) {
                     /* bottom pixel */
-                    int px2 = *(sbuf + (irv * image->stride) + uu);
+                    PixelType px2 = *(sbuf + (irv * image->stride_pixels) + uu);
                     /* horizontal interpolate */
                     if (iru < sw) {
                         /* bottom right pixel */
-                        int px3 = *(sbuf + (irv * image->stride) + iru);
+                        PixelType px3 = *(sbuf + (irv * image->stride_pixels) + iru);
                         px2 = INTERPOLATE(px2, px3, ar);
                     }
                     px = INTERPOLATE(px, px2, ab);
                 }
-                auto tmp = surface->blender(px, *buf, 255);
+                PixelType tmp = surface->blender(px, *buf, 255);
                 *buf = INTERPOLATE(tmp, *buf, MULTIPLY(opacity, A(px)));
                 ++buf;
 
@@ -206,20 +208,22 @@ static void _rasterBlendingPolygonImageSegment(SwSurface* surface, const SwImage
 }
 
 
-static void _rasterPolygonImageSegment(SwSurface* surface, const SwImage* image, const SwBBox* region, int yStart, int yEnd, AASpans* aaSpans, uint8_t opacity, bool matting)
+static void _rasterPolygonImageSegment(SwSurface<PixelType>* surface, const SwImage* image, const SwBBox* region, int yStart, int yEnd, AASpans* aaSpans, uint8_t opacity, bool matting)
 {
     float _dudx = dudx, _dvdx = dvdx;
     float _dxdya = dxdya, _dxdyb = dxdyb, _dudya = dudya, _dvdya = dvdya;
     float _xa = xa, _xb = xb, _ua = ua, _va = va;
-    auto sbuf = image->buf32;
-    auto dbuf = surface->buf32;
+    PixelType* sbuf = image->pixelBuffer;
+    PixelType* dbuf = surface->pixelBuffer;
     int32_t sw = static_cast<int32_t>(image->w);
     int32_t sh = static_cast<int32_t>(image->h);
-    int32_t x1, x2, x, y, ar, ab, iru, irv, px, ay;
+    int32_t x1, x2, x, y, iru, irv, ay;
+    uint8_t ar, ab;
+    PixelType px;
     int32_t vv = 0, uu = 0;
     int32_t minx = INT32_MAX, maxx = 0;
     float dx, u, v, iptr;
-    uint32_t* buf;
+    PixelType* buf;
     SwSpan* span = nullptr;         //used only when rle based.
 
     //for matting(composition)
@@ -276,11 +280,11 @@ static void _rasterPolygonImageSegment(SwSurface* surface, const SwImage* image,
             u = _ua + dx * _dudx;
             v = _va + dx * _dvdx;
 
-            buf = dbuf + ((y * surface->stride) + x1);
+            buf = dbuf + ((y * surface->stride_pixels) + x1);
 
             x = x1;
 
-            if (matting) cmp = &surface->compositor->image.buf8[(y * surface->compositor->image.stride + x1) * csize];
+            if (matting) cmp = &surface->compositor->image.buf8[(y * surface->compositor->image.stride_pixels + x1) * csize];
 
             if (opacity == 255) {
                 //Draw horizontal line
@@ -295,28 +299,28 @@ static void _rasterPolygonImageSegment(SwSurface* surface, const SwImage* image,
                     iru = uu + 1;
                     irv = vv + 1;
 
-                    px = *(sbuf + (vv * image->stride) + uu);
+                    px = *(sbuf + (vv * image->stride_pixels) + uu);
 
                     /* horizontal interpolate */
                     if (iru < sw) {
                         /* right pixel */
-                        int px2 = *(sbuf + (vv * image->stride) + iru);
+                        PixelType px2 = *(sbuf + (vv * image->stride_pixels) + iru);
                         px = INTERPOLATE(px, px2, ar);
                     }
                     /* vertical interpolate */
                     if (irv < sh) {
                         /* bottom pixel */
-                        int px2 = *(sbuf + (irv * image->stride) + uu);
+                        int px2 = *(sbuf + (irv * image->stride_pixels) + uu);
 
                         /* horizontal interpolate */
                         if (iru < sw) {
                             /* bottom right pixel */
-                            int px3 = *(sbuf + (irv * image->stride) + iru);
+                            PixelType px3 = *(sbuf + (irv * image->stride_pixels) + iru);
                             px2 = INTERPOLATE(px2, px3, ar);
                         }
                         px = INTERPOLATE(px, px2, ab);
                     }
-                    uint32_t src;
+                    PixelType src;
                     if (matting) {
                         src = ALPHA_BLEND(px, alpha(cmp));
                         cmp += csize;
@@ -348,23 +352,23 @@ static void _rasterPolygonImageSegment(SwSurface* surface, const SwImage* image,
                     /* horizontal interpolate */
                     if (iru < sw) {
                         /* right pixel */
-                        int px2 = *(sbuf + (vv * image->stride) + iru);
+                        int px2 = *(sbuf + (vv * image->stride_pixels) + iru);
                         px = INTERPOLATE(px, px2, ar);
                     }
                     /* vertical interpolate */
                     if (irv < sh) {
                         /* bottom pixel */
-                        int px2 = *(sbuf + (irv * image->stride) + uu);
+                        PixelType px2 = *(sbuf + (irv * image->stride_pixels) + uu);
 
                         /* horizontal interpolate */
                         if (iru < sw) {
                             /* bottom right pixel */
-                            int px3 = *(sbuf + (irv * image->stride) + iru);
+                            PixelType px3 = *(sbuf + (irv * image->stride_pixels) + iru);
                             px2 = INTERPOLATE(px2, px3, ar);
                         }
                         px = INTERPOLATE(px, px2, ab);
                     }
-                    uint32_t src;
+                    PixelType src;
                     if (matting) {
                         src = ALPHA_BLEND(px, MULTIPLY(opacity, alpha(cmp)));
                         cmp += csize;
@@ -399,7 +403,7 @@ static void _rasterPolygonImageSegment(SwSurface* surface, const SwImage* image,
 
 
 /* This mapping algorithm is based on Mikael Kalms's. */
-static void _rasterPolygonImage(SwSurface* surface, const SwImage* image, const SwBBox* region, Polygon& polygon, AASpans* aaSpans, uint8_t opacity)
+static void _rasterPolygonImage(SwSurface<PixelType>* surface, const SwImage* image, const SwBBox* region, Polygon& polygon, AASpans* aaSpans, uint8_t opacity)
 {
     float x[3] = {polygon.vertex[0].pt.x, polygon.vertex[1].pt.x, polygon.vertex[2].pt.x};
     float y[3] = {polygon.vertex[0].pt.y, polygon.vertex[1].pt.y, polygon.vertex[2].pt.y};
@@ -791,12 +795,12 @@ static void _calcAAEdge(AASpans *aaSpans, int32_t eidx)
 }
 
 
-static bool _apply(SwSurface* surface, AASpans* aaSpans)
+static bool _apply(SwSurface<PixelType>* surface, AASpans* aaSpans)
 {
-    auto end = surface->buf32 + surface->h * surface->stride;
+    PixelType* end = surface->pixelBuffer + surface->h * surface->stride_pixels;
     auto y = aaSpans->yStart;
-    uint32_t pixel;
-    uint32_t* dst;
+    PixelType pixel;
+    PixelType* dst;
     int32_t pos;
 
    //left side
@@ -808,10 +812,10 @@ static bool _apply(SwSurface* surface, AASpans* aaSpans)
         auto line = &aaSpans->lines[y - aaSpans->yStart];
         auto width = line->x[1] - line->x[0];
         if (width > 0) {
-            auto offset = y * surface->stride;
+            auto offset = y * surface->stride_pixels;
 
             //Left edge
-            dst = surface->buf32 + (offset + line->x[0]);
+            dst = surface->pixelBuffer + (offset + line->x[0]);
             if (line->x[0] > 1) pixel = *(dst - 1);
             else pixel = *dst;
             pos = 1;
@@ -828,14 +832,14 @@ static bool _apply(SwSurface* surface, AASpans* aaSpans)
             }
 
             //Right edge
-            dst = surface->buf32 + offset + line->x[1] - 1;
+            dst = surface->pixelBuffer + offset + line->x[1] - 1;
 
             if (line->x[1] < (int32_t)(surface->w - 1)) pixel = *(dst + 1);
             else pixel = *dst;
             pos = line->length[1];
 
             //exceptional handling. out of memory bound.
-            if (dst - pos < surface->buf32) --pos;
+            if (dst - pos < surface->pixelBuffer) --pos;
 
             while (pos > 0) {
                 *dst = INTERPOLATE(*dst, pixel, 255 - (line->coverage[1] * pos));
@@ -863,7 +867,7 @@ static bool _apply(SwSurface* surface, AASpans* aaSpans)
     | /  |
     3 -- 2
 */
-static bool _rasterTexmapPolygon(SwSurface* surface, const SwImage* image, const Matrix& transform, const SwBBox* region, uint8_t opacity)
+static bool _rasterTexmapPolygon(SwSurface<PixelType>* surface, const SwImage* image, const Matrix& transform, const SwBBox* region, uint8_t opacity)
 {
     if (surface->channelSize == sizeof(uint8_t)) {
         TVGERR("SW_ENGINE", "Not supported grayscale Textmap polygon!");

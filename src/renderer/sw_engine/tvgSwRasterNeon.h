@@ -89,12 +89,12 @@ static void neonRasterPixel32(uint32_t *dst, uint32_t val, uint32_t offset, int3
 }
 
 
-static bool neonRasterTranslucentRle(SwSurface* surface, const SwRle* rle, const RenderColor& c)
+static bool neonRasterTranslucentRle(SwSurface<PIXEL_T>* surface, const SwRle* rle, const RenderColor& c)
 {
     auto span = rle->spans;
 
-    //32bit channels
-    if (surface->channelSize == sizeof(uint32_t)) {
+    //16/32bits channels
+    if (surface->channelSize != sizeof(uint8_t)) {
         auto color = surface->join(c.r, c.g, c.b, c.a);
         uint32_t src;
         uint8x8_t *vDst = nullptr;
@@ -128,8 +128,9 @@ static bool neonRasterTranslucentRle(SwSurface* surface, const SwRle* rle, const
 
             ++span;
         }
-    //8bit grayscale
-    } else if (surface->channelSize == sizeof(uint8_t)) {
+    }
+    //8bits grayscale
+    else {
         TVGLOG("SW_ENGINE", "Require Neon Optimization, Channel Size = %d", surface->channelSize);
         uint8_t src;
         for (uint32_t i = 0; i < rle->size; ++i, ++span) {
@@ -146,13 +147,13 @@ static bool neonRasterTranslucentRle(SwSurface* surface, const SwRle* rle, const
 }
 
 
-static bool neonRasterTranslucentRect(SwSurface* surface, const SwBBox& region, const RenderColor& c)
+static bool neonRasterTranslucentRect(SwSurface<PIXEL_T>* surface, const SwBBox& region, const RenderColor& c)
 {
     auto h = static_cast<uint32_t>(region.max.y - region.min.y);
     auto w = static_cast<uint32_t>(region.max.x - region.min.x);
 
-    //32bits channels
-    if (surface->channelSize == sizeof(uint32_t)) {
+    //16/32bits channels
+    if (surface->channelSize != sizeof(uint8_t)) {
         auto color = surface->join(c.r, c.g, c.b, c.a);
         auto buffer = surface->buf32 + (region.min.y * surface->stride) + region.min.x;
         auto ialpha = 255 - c.a;
@@ -182,8 +183,9 @@ static bool neonRasterTranslucentRect(SwSurface* surface, const SwBBox& region, 
             auto leftovers = (w - align) % 2;
             if (leftovers > 0) dst[w - 1] = color + ALPHA_BLEND(dst[w - 1], ialpha);
         }
-    //8bit grayscale
-    } else if (surface->channelSize == sizeof(uint8_t)) {
+    }
+    //8bits grayscale
+    else {
         TVGLOG("SW_ENGINE", "Require Neon Optimization, Channel Size = %d", surface->channelSize);
         auto buffer = surface->buf8 + (region.min.y * surface->stride) + region.min.x;
         auto ialpha = ~c.a;

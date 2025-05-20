@@ -5,6 +5,8 @@
 #include <functional>
 #include <list>
 
+#include "thorvg_capi.h"
+
 #ifdef TVG_API
     #undef TVG_API
 #endif
@@ -95,14 +97,15 @@ enum class Result
 /**
  * @brief Enumeration specifying the methods of combining the 8-bit color channels into 32-bit color.
  */
-enum class ColorSpace : uint8_t
+enum ColorSpace : uint8_t
 {
-    ABGR8888 = 0,      ///< The channels are joined in the order: alpha, blue, green, red. Colors are alpha-premultiplied.
-    ARGB8888,          ///< The channels are joined in the order: alpha, red, green, blue. Colors are alpha-premultiplied.
-    ABGR8888S,         ///< The channels are joined in the order: alpha, blue, green, red. Colors are un-alpha-premultiplied. @since 0.12
-    ARGB8888S,         ///< The channels are joined in the order: alpha, red, green, blue. Colors are un-alpha-premultiplied. @since 0.12
-    Grayscale8,        ///< One single channel data.
-    Unknown = 255      ///< Unknown channel data. This is reserved for an initial ColorSpace value. @since 1.0
+    ABGR8888    = TVG_COLORSPACE_ABGR8888  ,   ///< The channels are joined in the order: alpha, blue, green, red. Colors are alpha-premultiplied.
+    ARGB8888    = TVG_COLORSPACE_ARGB8888  ,   ///< The channels are joined in the order: alpha, red, green, blue. Colors are alpha-premultiplied.
+    ABGR8888S   = TVG_COLORSPACE_ABGR8888S ,   ///< The channels are joined in the order: alpha, blue, green, red. Colors are un-alpha-premultiplied. @since 0.12
+    ARGB8888S   = TVG_COLORSPACE_ARGB8888S ,   ///< The channels are joined in the order: alpha, red, green, blue. Colors are un-alpha-premultiplied. @since 0.12
+    RGB565      = TVG_COLORSPACE_RGB565    ,
+    Grayscale8  = TVG_COLORSPACE_GRAYSCALE8,   ///< One single channel data.
+    Unknown     = TVG_COLORSPACE_UNKNOWN       ///< Unknown channel data. This is reserved for an initial ColorSpace value. @since 1.0
 };
 
 
@@ -742,7 +745,7 @@ public:
      *
      * @see Canvas::sync()
      */
-    Result draw(bool clear = false) noexcept;
+    Result draw(bool clear = false, PIXEL_TYPE color = 0) noexcept;
 
     /**
      * @brief Sets the drawing region in the canvas.
@@ -1395,7 +1398,7 @@ public:
      *
      * @since 0.9
      */
-    Result load(uint32_t* data, uint32_t w, uint32_t h, ColorSpace cs, bool copy = false) noexcept;
+    Result load(PixelType* data, uint32_t w, uint32_t h, ColorSpace cs, bool copy = false) noexcept;
 
     /**
      * @brief Retrieve a paint object from the Picture scene by its Unique ID.
@@ -1722,7 +1725,8 @@ public:
      * @see Canvas::viewport()
      * @see Canvas::sync()
     */
-    Result target(uint32_t* buffer, uint32_t stride, uint32_t w, uint32_t h, ColorSpace cs) noexcept;
+    template<typename PIXEL_T>
+    Result target(PIXEL_T* buffer, uint32_t stride_pixels, uint32_t w, uint32_t h, ColorSpace cs) noexcept;
 
     /**
      * @brief Creates a new SwCanvas object.

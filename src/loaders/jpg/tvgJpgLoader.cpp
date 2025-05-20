@@ -39,7 +39,7 @@ void JpgLoader::clear()
 void JpgLoader::run(unsigned tid)
 {
     surface.buf8 = jpgdDecompress(decoder);
-    surface.stride = static_cast<uint32_t>(w);
+    surface.stride_pixels = static_cast<uint32_t>(w);
     surface.w = static_cast<uint32_t>(w);
     surface.h = static_cast<uint32_t>(h);
     surface.cs = ColorSpace::ARGB8888;

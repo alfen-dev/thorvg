@@ -25,6 +25,7 @@
 
 #include "tvgRender.h"
 
+template<typename PIXEL_T>
 struct SwSurface;
 struct SwTask;
 struct SwCompositor;
@@ -52,9 +53,10 @@ public:
     ColorSpace colorSpace() override;
     const RenderSurface* mainSurface() override;
 
-    bool clear() override;
+    bool clear(PIXEL_TYPE color) override;
     bool sync() override;
-    bool target(pixel_t* data, uint32_t stride, uint32_t w, uint32_t h, ColorSpace cs);
+    template<typename PIXEL_T>
+    bool target(PIXEL_T* data, uint32_t stride, uint32_t w, uint32_t h, ColorSpace cs);
 
     RenderCompositor* target(const RenderRegion& region, ColorSpace cs, CompositionFlag flags) override;
     bool beginComposite(RenderCompositor* cmp, MaskMethod method, uint8_t opacity) override;
@@ -70,9 +72,9 @@ public:
     static bool term();
 
 private:
-    SwSurface*           surface = nullptr;           //active surface
+    SwSurface<PixelType>*           surface = nullptr;           //active surface
     Array<SwTask*>       tasks;                       //async task list
-    Array<SwSurface*>    compositors;                 //render targets cache list
+    Array<SwSurface<PixelType>*>    compositors;                 //render targets cache list
     SwMpool*             mpool;                       //private memory pool
     RenderRegion         vport;                       //viewport
     bool                 sharedMpool;                 //memory-pool behavior policy
@@ -80,10 +82,12 @@ private:
     SwRenderer();
     ~SwRenderer();
 
-    SwSurface* request(int channelSize, bool square);
+    SwSurface<PixelType>* request(int channelSize, bool square);
     RenderData prepareCommon(SwTask* task, const Matrix& transform, const Array<RenderData>& clips, uint8_t opacity, RenderUpdateFlag flags);
 };
 
 }
+
+#include "src/renderer/sw_engine/tvgSwRenderer.tpp"
 
 #endif /* _TVG_SW_RENDERER_H_ */

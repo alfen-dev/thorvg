@@ -1062,7 +1062,7 @@ struct LottieSlot
 
     LottieSlot(LottieLayer* layer, LottieObject* parent, char* sid, LottieObject* obj, LottieProperty::Type type) : context{layer, parent}, sid(sid), type(type)
     {
-        pairs.push({obj});
+        pairs.push({obj, NULL});
     }
 
     ~LottieSlot()

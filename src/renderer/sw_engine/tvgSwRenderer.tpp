@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 - 2025 the ThorVG project. All rights reserved.
+ * Copyright (c) 2020 - 2024 the ThorVG project. All rights reserved.
 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,23 +20,27 @@
  * SOFTWARE.
  */
 
-#ifndef _TVG_LOADER_H_
-#define _TVG_LOADER_H_
 
-#include "tvgLoadModule.h"
+#include "thorvg.h"
 
-struct LoaderMgr
+#include "tvgSwCommon.h"
+
+template<typename PIXEL_T>
+bool SwRenderer::target(PIXEL_T* data, uint32_t stride_pixels, uint32_t w, uint32_t h, ColorSpace cs)
 {
-    static bool init();
-    static bool term();
-    static LoadModule* loader(const char* filename, bool* invalid);
-    static LoadModule* loader(const char* data, uint32_t size, const char* mimeType, const char* rpath, bool copy);
-    static LoadModule* loader(const PixelType* data, uint32_t w, uint32_t h, ColorSpace cs, bool copy);
-    static LoadModule* loader(const char* name, const char* data, uint32_t size, const char* mimeType, bool copy);
-    static LoadModule* font(const char* name);
-    static LoadModule* anyfont();
-    static bool retrieve(const char* filename);
-    static bool retrieve(LoadModule* loader);
-};
+    if (!data || stride_pixels == 0 || w == 0 || h == 0 || w > stride_pixels) return false;
 
-#endif //_TVG_LOADER_H_
+    clearCompositors();
+
+    if (!surface) surface = new SwSurface<PIXEL_T>;
+
+    surface->data = data;
+    surface->stride_pixels = stride_pixels;
+    surface->w = w;
+    surface->h = h;
+    surface->cs = cs;
+    surface->channelSize = CHANNEL_SIZE(cs);
+    surface->premultiplied = true;
+
+    return rasterCompositor(surface);
+}
