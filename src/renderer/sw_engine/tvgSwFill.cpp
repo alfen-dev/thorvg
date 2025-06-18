@@ -28,7 +28,7 @@
 /************************************************************************/
 
 #define RADIAL_A_THRESHOLD 0.0005f
-#define GRADIENT_STOP_SIZE 256
+#define GRADIENT_STOP_SIZE 1024
 #define FIXPT_BITS 8
 #define FIXPT_SIZE (1<<FIXPT_BITS)
 
