@@ -141,3 +141,8 @@ void* operator new(std::size_t size) {
 void operator delete(void* ptr) noexcept {
     tvg::free(ptr);
 }
+
+void operator delete(void* ptr, std::size_t size) noexcept
+{
+    tvg::free(ptr);
+}
