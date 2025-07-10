@@ -27,30 +27,30 @@
 #include "tvgLock.h"
 
 #ifdef THORVG_SVG_LOADER_SUPPORT
-    #include "tvgSvgLoader.h"
+    #include "../svg/tvgSvgLoader.h"
 #endif
 
 #ifdef THORVG_PNG_LOADER_SUPPORT
-    #include "tvgPngLoader.h"
+    #include "../png/tvgPngLoader.h"
 #endif
 
 #ifdef THORVG_JPG_LOADER_SUPPORT
-    #include "tvgJpgLoader.h"
+    #include "../jpg/tvgJpgLoader.h"
 #endif
 
 #ifdef THORVG_WEBP_LOADER_SUPPORT
-    #include "tvgWebpLoader.h"
+    #include "../webp/tvgWebpLoader.h"
 #endif
 
 #ifdef THORVG_TTF_LOADER_SUPPORT
-    #include "tvgTtfLoader.h"
+    #include "../ttf/tvgTtfLoader.h"
 #endif
 
 #ifdef THORVG_LOTTIE_LOADER_SUPPORT
-    #include "tvgLottieLoader.h"
+    #include "../lottie/tvgLottieLoader.h"
 #endif
 
-#include "tvgRawLoader.h"
+#include "../raw/tvgRawLoader.h"
 
 
 uintptr_t HASH_KEY(const char* data)
@@ -62,8 +62,11 @@ uintptr_t HASH_KEY(const char* data)
 /* Internal Class Implementation                                        */
 /************************************************************************/
 
-//TODO: remove it.
+#if PIXEL_TYPE_SIZE == 4
 atomic<ColorSpace> ImageLoader::cs{ColorSpace::ARGB8888};
+#elif PIXEL_TYPE_SIZE == 2
+atomic<ColorSpace> ImageLoader::cs{ColorSpace::RGB565};
+#endif        
 
 static Key _key;
 static Inlist<LoadModule> _activeLoaders;
@@ -378,7 +381,7 @@ LoadModule* LoaderMgr::loader(const char* data, uint32_t size, const char* mimeT
 }
 
 
-LoadModule* LoaderMgr::loader(const uint32_t *data, uint32_t w, uint32_t h, ColorSpace cs, bool copy)
+LoadModule* LoaderMgr::loader(const PixelType *data, uint32_t w, uint32_t h, ColorSpace cs, bool copy)
 {
     //Note that users could use the same data pointer with the different content.
     //Thus caching is only valid for shareable.

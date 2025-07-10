@@ -25,6 +25,9 @@
 
 #include <math.h>
 #include <cstdarg>
+#include <algorithm>
+#include <utility>
+
 #include "tvgCommon.h"
 #include "tvgArray.h"
 #include "tvgLock.h"
@@ -33,7 +36,7 @@ namespace tvg
 {
 
 using RenderData = void*;
-using pixel_t = uint32_t;
+using pixel_t = PixelType;
 
 #define DASH_PATTERN_THRESHOLD 0.001f
 
@@ -54,16 +57,16 @@ static inline RenderUpdateFlag operator|(const RenderUpdateFlag a, const RenderU
 struct RenderSurface
 {
     union {
-        pixel_t* data = nullptr;    //system based data pointer
-        uint32_t* buf32;            //for explicit 32bits channels
-        uint8_t*  buf8;             //for explicit 8bits grayscale
+        void* data = nullptr;    //system based data pointer
+        pixel_t* pixelBuffer;         //for explicit 16/32bits channels
+        uint8_t* buf8;         //for explicit 8bits channels
     };
-    Key key;                        //a reserved lock for the thread safety
+    Key key;                     //a reserved lock for the thread safety
     uint32_t stride = 0;
     uint32_t w = 0, h = 0;
     ColorSpace cs = ColorSpace::Unknown;
     uint8_t channelSize = 0;
-    bool premultiplied = false;         //Alpha-premultiplied
+    bool premultiplied = false;  //Alpha-premultiplied
 
     RenderSurface()
     {
@@ -531,7 +534,7 @@ public:
     virtual bool blend(BlendMethod method) = 0;
     virtual ColorSpace colorSpace() = 0;
     virtual const RenderSurface* mainSurface() = 0;
-    virtual bool clear() = 0;
+    virtual bool clear(uint32_t colorWithOpacity) = 0;
     virtual bool sync() = 0;
 
     //composition
@@ -575,11 +578,17 @@ static inline bool MASK_REGION_MERGING(MaskMethod method)
 static inline uint8_t CHANNEL_SIZE(ColorSpace cs)
 {
     switch(cs) {
+#if PIXEL_TYPE_SIZE == 4
         case ColorSpace::ABGR8888:
         case ColorSpace::ABGR8888S:
         case ColorSpace::ARGB8888:
         case ColorSpace::ARGB8888S:
             return sizeof(uint32_t);
+#elif PIXEL_TYPE_SIZE == 2
+        case ColorSpace::RGB565:
+            return sizeof(uint16_t);
+#elif PIXEL_TYPE_SIZE == 1
+#endif
         case ColorSpace::Grayscale8:
             return sizeof(uint8_t);
         case ColorSpace::Unknown:

@@ -99,13 +99,13 @@ static void avxRasterPixel32(uint32_t *dst, uint32_t val, uint32_t offset, int32
 }
 
 
-static bool avxRasterTranslucentRect(SwSurface* surface, const RenderRegion& bbox, const RenderColor& c)
+static bool avxRasterTranslucentRect(SwSurface<PIXEL_T>* surface, const RenderRegion& bbox, const RenderColor& c)
 {
     auto h = bbox.h();
     auto w = bbox.w();
 
-    //32bits channels
-    if (surface->channelSize == sizeof(uint32_t)) {
+    //16/32bits channels
+    if (surface->channelSize != sizeof(uint8_t)) {
         auto color = surface->join(c.r, c.g, c.b, c.a);
         auto buffer = surface->buf32 + (bbox.min.y * surface->stride) + bbox.min.x;
 
@@ -158,13 +158,13 @@ static bool avxRasterTranslucentRect(SwSurface* surface, const RenderRegion& bbo
 }
 
 
-static bool avxRasterTranslucentRle(SwSurface* surface, const SwRle* rle, const RenderRegion& bbox, const RenderColor& c)
+static bool avxRasterTranslucentRle(SwSurface<PIXEL_T>* surface, const SwRle* rle, const RenderRegion& bbox, const RenderColor& c)
 {
     const SwSpan* end;
     int32_t x, len;
 
-    //32bit channels
-    if (surface->channelSize == sizeof(uint32_t)) {
+    //16/32bit channels
+    if (surface->channelSize != sizeof(uint8_t)) {
         auto color = surface->join(c.r, c.g, c.b, c.a);
         uint32_t src;
 

@@ -34,7 +34,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-#include "config.h"
+#include "tvg_config.h"
 #include "thorvg.h"
 
 using namespace std;
@@ -80,11 +80,23 @@ namespace tvg {
         constexpr auto LogBgColor = "\033[42m";  //bg green
         constexpr auto GreyColor = "\033[90m";   //grey
         constexpr auto ResetColors = "\033[0m";  //default
+#ifndef TVGERR
         #define TVGERR(tag, fmt, ...) fprintf(stderr, "%s[E]%s %s" tag "%s (%s %d): %s" fmt "\n", ErrorBgColor, ResetColors, ErrorColor, GreyColor, __FILE__, __LINE__, ResetColors, ##__VA_ARGS__)
+#endif
+#ifndef TVGLOG
         #define TVGLOG(tag, fmt, ...) fprintf(stdout, "%s[L]%s %s" tag "%s (%s %d): %s" fmt "\n", LogBgColor, ResetColors, LogColor, GreyColor, __FILE__, __LINE__, ResetColors, ##__VA_ARGS__)
+#endif
+
+#if 0
+        #define TVGLOG_RENDERER(fmt, ...) TVGLOG("RENDERER", fmt, ##__VA_ARGS__)
+#else
+        #define TVGLOG_RENDERER(fmt, ...) do {} while(0)
+#endif
+
     #else
         #define TVGERR(...) do {} while(0)
         #define TVGLOG(...) do {} while(0)
+        #define TVGLOG_RENDERER(fmt, ...) do {} while(0)
     #endif
 
     uint16_t THORVG_VERSION_NUMBER();

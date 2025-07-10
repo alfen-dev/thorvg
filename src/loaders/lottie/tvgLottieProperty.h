@@ -331,7 +331,7 @@ struct LottieGenericProperty : LottieProperty
 
     LottieGenericProperty() : LottieProperty(PType) {}
 
-    LottieGenericProperty(const MyProperty& rhs)
+    LottieGenericProperty(const MyProperty& rhs) : LottieProperty(PType)
     {
         copy(const_cast<MyProperty&>(rhs));
     }
@@ -650,7 +650,7 @@ struct LottieColorStop : LottieProperty
 
     LottieColorStop() : LottieProperty(LottieProperty::Type::ColorStop) {}
 
-    LottieColorStop(const LottieColorStop& rhs)
+    LottieColorStop(const LottieColorStop& rhs) : LottieProperty(LottieProperty::Type::ColorStop)
     {
         copy(const_cast<LottieColorStop&>(rhs));
     }
@@ -830,7 +830,7 @@ struct LottieTextDoc : LottieProperty
 
     LottieTextDoc() : LottieProperty(LottieProperty::Type::TextDoc) {}
 
-    LottieTextDoc(const LottieTextDoc& rhs)
+    LottieTextDoc(const LottieTextDoc& rhs) : LottieProperty(LottieProperty::Type::TextDoc)
     {
         copy(const_cast<LottieTextDoc&>(rhs));
     }
@@ -958,7 +958,7 @@ struct LottieBitmap : LottieProperty
 
     LottieBitmap() : LottieProperty(LottieProperty::Type::Image) {}
 
-    LottieBitmap(const LottieBitmap& rhs)
+    LottieBitmap(const LottieBitmap& rhs) : LottieProperty(LottieProperty::Type::Image)
     {
         copy(const_cast<LottieBitmap&>(rhs));
     }

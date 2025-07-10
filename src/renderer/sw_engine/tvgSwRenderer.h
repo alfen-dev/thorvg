@@ -25,6 +25,7 @@
 
 #include "tvgRender.h"
 
+template<typename PIXEL_T>
 struct SwSurface;
 struct SwTask;
 struct SwCompositor;
@@ -50,12 +51,13 @@ public:
     bool blend(BlendMethod method) override;
     ColorSpace colorSpace() override;
     const RenderSurface* mainSurface() override;
-    bool clear() override;
+    bool clear(uint32_t colorWithOpacity) override;
     bool sync() override;
-    bool target(pixel_t* data, uint32_t stride, uint32_t w, uint32_t h, ColorSpace cs);
+    template<typename PIXEL_T>
+    bool target(PIXEL_T* data, uint32_t stride, uint32_t w, uint32_t h, ColorSpace cs);
 
     //composition
-    SwSurface* request(int channelSize, bool square);
+    SwSurface<PixelType>* request(int channelSize, bool square);
     RenderCompositor* target(const RenderRegion& region, ColorSpace cs, CompositionFlag flags) override;
     bool beginComposite(RenderCompositor* cmp, MaskMethod method, uint8_t opacity) override;
     bool endComposite(RenderCompositor* cmp) override;
@@ -75,9 +77,9 @@ public:
     static bool term();
 
 private:
-    SwSurface*           surface = nullptr;           //active surface
+    SwSurface<PixelType>*           surface = nullptr;           //active surface
     Array<SwTask*>       tasks;                       //async task list
-    Array<SwSurface*>    compositors;                 //render targets cache list
+    Array<SwSurface<PixelType>*>    compositors;                 //render targets cache list
     RenderDirtyRegion    dirtyRegion;                 //partial rendering support
     SwMpool*             mpool;                       //private memory pool
     bool                 sharedMpool;                 //memory-pool behavior policy
@@ -90,5 +92,7 @@ private:
 };
 
 }
+
+#include "src/renderer/sw_engine/tvgSwRenderer.tpp"
 
 #endif /* _TVG_SW_RENDERER_H_ */

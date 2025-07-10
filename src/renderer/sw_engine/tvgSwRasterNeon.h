@@ -89,13 +89,13 @@ static void neonRasterPixel32(uint32_t *dst, uint32_t val, uint32_t offset, int3
 }
 
 
-static bool neonRasterTranslucentRle(SwSurface* surface, const SwRle* rle, const RenderRegion& bbox, const RenderColor& c)
+static bool neonRasterTranslucentRle(SwSurface<PIXEL_T>* surface, const SwRle* rle, const RenderRegion& bbox, const RenderColor& c)
 {
     const SwSpan* end;
     int32_t x, len;
 
-    //32bit channels
-    if (surface->channelSize == sizeof(uint32_t)) {
+    //16/32bit channels
+    if (surface->channelSize != sizeof(uint8_t)) {
         auto color = surface->join(c.r, c.g, c.b, c.a);
         uint32_t src;
         uint8x8_t *vDst = nullptr;
@@ -147,13 +147,13 @@ static bool neonRasterTranslucentRle(SwSurface* surface, const SwRle* rle, const
 }
 
 
-static bool neonRasterTranslucentRect(SwSurface* surface, const RenderRegion& bbox, const RenderColor& c)
+static bool neonRasterTranslucentRect(SwSurface<PIXEL_T>* surface, const RenderRegion& bbox, const RenderColor& c)
 {
     auto h = bbox.h();
     auto w = bbox.w();
 
-    //32bits channels
-    if (surface->channelSize == sizeof(uint32_t)) {
+    //16/32bits channels
+    if (surface->channelSize != sizeof(uint8_t)) {
         auto color = surface->join(c.r, c.g, c.b, c.a);
         auto buffer = surface->buf32 + (bbox.min.y * surface->stride) + bbox.min.x;
         auto ialpha = 255 - c.a;

@@ -86,7 +86,7 @@ public:
     const RenderSurface* mainSurface() override;
     bool target(void* context, int32_t id, uint32_t w, uint32_t h);
     bool sync() override;
-    bool clear() override;
+    bool clear(uint32_t colorWithOpacity = 0) override;
 
     //composition
     RenderCompositor* target(const RenderRegion& region, ColorSpace cs, CompositionFlag flags) override;

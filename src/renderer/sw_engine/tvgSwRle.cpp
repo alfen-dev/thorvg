@@ -320,6 +320,7 @@ static void _horizLine(RleWorker& rw, int32_t x, int32_t y, int32_t area, int32_
     }
 
     auto rle = rw.rle;
+    TVG_ASSERT_NULL(rle);
 
     if (!rw.antiAlias) coverage = 255;
 
@@ -731,7 +732,11 @@ SwRle* rleRender(SwRle* rle, const SwOutline* outline, const RenderRegion& bbox,
 {
     if (!outline) return nullptr;
 
+#ifdef RENDER_POOL_SIZE_REDUCED
+    constexpr auto RENDER_POOL_SIZE = RENDER_POOL_SIZE_REDUCED;
+#else
     constexpr auto RENDER_POOL_SIZE = 16384L;
+#endif    
     constexpr auto BAND_SIZE = 40;
 
     //TODO: We can preserve several static workers in advance

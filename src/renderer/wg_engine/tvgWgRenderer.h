@@ -42,7 +42,7 @@ public:
     bool blend(BlendMethod method) override;
     ColorSpace colorSpace() override;
     const RenderSurface* mainSurface() override;
-    bool clear() override;
+    bool clear(uint32_t colorWithOpacity = 0) override;
     bool sync() override;
     bool target(WGPUDevice device, WGPUInstance instance, void* target, uint32_t width, uint32_t height, int type = 0);
 

@@ -38,7 +38,7 @@ static uint32_t threadsCnt = 0;
 
 struct SwTask : Task
 {
-    SwSurface* surface = nullptr;
+    SwSurface<PixelType>* surface = nullptr;
     SwMpool* mpool = nullptr;
     RenderRegion curBox = {};  //current rendering region
     RenderRegion prvBox = {};  //previous rendering region
@@ -282,13 +282,24 @@ SwRenderer::~SwRenderer()
 }
 
 
-bool SwRenderer::clear()
+bool SwRenderer::clear(uint32_t colorWithOpacity)
 {
+    bool result = false;
     if (surface) {
         fulldraw = true;
-        return rasterClear(surface, 0, 0, surface->w, surface->h);
-    }
-    return false;
+
+	    uint8_t opacity = A(colorWithOpacity);
+	    bool translucent = (opacity < 255);
+		// Do not clear on pixels having (any) transparency for 8/16 bit pixels,
+	    // or for 32bit pixels when no transparency/color is non solid
+	    result = true;
+	    if ((!translucent) || ((PIXEL_TYPE_SIZE == 4) && (opacity != 0))) {
+	        PixelType color;
+	        color32_to_color(colorWithOpacity, &color);
+	        result = rasterClear(surface, 0, 0, surface->w, surface->h, color);
+	    }
+	}
+    return result;
 }
 
 
@@ -308,28 +319,7 @@ bool SwRenderer::sync()
 }
 
 
-bool SwRenderer::target(pixel_t* data, uint32_t stride, uint32_t w, uint32_t h, ColorSpace cs)
-{
-    if (!data || stride == 0 || w == 0 || h == 0 || w > stride) return false;
 
-    clearCompositors();
-
-    if (!surface) surface = new SwSurface;
-
-    surface->data = data;
-    surface->stride = stride;
-    surface->w = w;
-    surface->h = h;
-    surface->cs = cs;
-    surface->channelSize = CHANNEL_SIZE(cs);
-    surface->premultiplied = true;
-
-    dirtyRegion.init(w, h);
-
-    fulldraw = true;  //reset the screen
-
-    return rasterCompositor(surface);
-}
 
 
 bool SwRenderer::preUpdate()
@@ -411,7 +401,7 @@ bool SwRenderer::renderImage(RenderData data)
 
     if (task->opacity == 0) return true;
 
-    auto raster = [&](SwSurface* surface, const SwImage& image, const Matrix& transform, const RenderRegion& bbox, uint8_t opacity) {
+    auto raster = [&](SwSurface<PixelType>* surface, const SwImage& image, const Matrix& transform, const RenderRegion& bbox, uint8_t opacity) {
         if (bbox.invalid() || bbox.x() >= surface->w || bbox.y() >= surface->h) return true;
 
         //RLE Image
@@ -467,7 +457,7 @@ bool SwRenderer::renderShape(RenderData data)
 
     if (task->opacity == 0) return true;
 
-    auto fill = [](SwShapeTask* task, SwSurface* surface, const RenderRegion& bbox) {
+    auto fill = [](SwShapeTask* task, SwSurface<PixelType>* surface, const RenderRegion& bbox) {
         if (auto fill = task->rshape->fill) {
             rasterGradientShape(surface, &task->shape, bbox, fill, task->opacity);
         } else {
@@ -478,7 +468,7 @@ bool SwRenderer::renderShape(RenderData data)
         }
     };
 
-    auto stroke = [](SwShapeTask* task, SwSurface* surface, const RenderRegion& bbox) {
+    auto stroke = [](SwShapeTask* task, SwSurface<PixelType>* surface, const RenderRegion& bbox) {
         if (auto strokeFill = task->rshape->strokeFill()) {
             rasterGradientStroke(surface, &task->shape, bbox, strokeFill, task->opacity);
         } else {
@@ -528,43 +518,43 @@ bool SwRenderer::blend(BlendMethod method)
 
     switch (method) {
         case BlendMethod::Normal:
-            surface->blender = nullptr;
+            surface->blender= nullptr;
             break;
         case BlendMethod::Multiply:
-            surface->blender = opBlendMultiply;
+            surface->blender= opBlendMultiply<PixelType>;
             break;
         case BlendMethod::Screen:
-            surface->blender = opBlendScreen;
+            surface->blender= opBlendScreen<PixelType>;
             break;
         case BlendMethod::Overlay:
-            surface->blender = opBlendOverlay;
+            surface->blender= opBlendOverlay<PixelType>;
             break;
         case BlendMethod::Darken:
-            surface->blender = opBlendDarken;
+            surface->blender= opBlendDarken<PixelType>;
             break;
         case BlendMethod::Lighten:
-            surface->blender = opBlendLighten;
+            surface->blender= opBlendLighten<PixelType>;
             break;
         case BlendMethod::ColorDodge:
-            surface->blender = opBlendColorDodge;
+            surface->blender= opBlendColorDodge<PixelType>;
             break;
         case BlendMethod::ColorBurn:
-            surface->blender = opBlendColorBurn;
+            surface->blender= opBlendColorBurn<PixelType>;
             break;
         case BlendMethod::HardLight:
-            surface->blender = opBlendHardLight;
+            surface->blender= opBlendHardLight<PixelType>;
             break;
         case BlendMethod::SoftLight:
-            surface->blender = opBlendSoftLight;
+            surface->blender= opBlendSoftLight<PixelType>;
             break;
         case BlendMethod::Difference:
-            surface->blender = opBlendDifference;
+            surface->blender= opBlendDifference<PixelType>;
             break;
         case BlendMethod::Exclusion:
-            surface->blender = opBlendExclusion;
+            surface->blender= opBlendExclusion<PixelType>;
             break;
         case BlendMethod::Add:
-            surface->blender = opBlendAdd;
+            surface->blender= opBlendAdd<PixelType>;
             break;
         default:
             TVGLOG("SW_ENGINE", "Non supported blending option = %d", (int) method);
@@ -606,9 +596,9 @@ const RenderSurface* SwRenderer::mainSurface()
 }
 
 
-SwSurface* SwRenderer::request(int channelSize, bool square)
+SwSurface<PixelType>* SwRenderer::request(int channelSize, bool square)
 {
-    SwSurface* cmp = nullptr;
+    SwSurface<PixelType>* cmp = nullptr;
     uint32_t w, h;
 
     if (square) {
@@ -633,7 +623,7 @@ SwSurface* SwRenderer::request(int channelSize, bool square)
     //New Composition
     if (!cmp) {
         //Inherits attributes from main surface
-        cmp = new SwSurface(surface);
+        cmp = new SwSurface<PixelType>(surface);
         cmp->compositor = new SwCompositor;
         cmp->compositor->image.data = tvg::malloc<pixel_t*>(channelSize * w * h);
         cmp->w = cmp->compositor->image.w = w;
@@ -736,10 +726,10 @@ bool SwRenderer::render(RenderCompositor* cmp, const RenderEffect* effect, bool 
             return effectGaussianBlur(p, request(surface->channelSize, true), static_cast<const RenderEffectGaussianBlur*>(effect));
         }
         case SceneEffect::DropShadow: {
-            auto cmp1 = request(surface->channelSize, true);
+            SwSurface<PixelType>* cmp1 = request(surface->channelSize, true);
             cmp1->compositor->valid = false;
-            auto cmp2 = request(surface->channelSize, true);
-            SwSurface* surfaces[] = {cmp1, cmp2};
+            SwSurface<PixelType>* cmp2 = request(surface->channelSize, true);
+            SwSurface<PixelType>* surfaces[] = {cmp1, cmp2};
             auto ret = effectDropShadow(p, surfaces, static_cast<const RenderEffectDropShadow*>(effect));
             cmp1->compositor->valid = true;
             return ret;

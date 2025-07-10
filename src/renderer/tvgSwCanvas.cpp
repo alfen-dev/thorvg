@@ -25,7 +25,7 @@
 #include "tvgLoadModule.h"
 
 #ifdef THORVG_SW_RASTER_SUPPORT
-    #include "tvgSwRenderer.h"
+    #include "sw_engine/tvgSwRenderer.h"
 #endif
 
 
@@ -36,36 +36,6 @@ SwCanvas::~SwCanvas()
 #ifdef THORVG_SW_RASTER_SUPPORT
     SwRenderer::term();
 #endif
-}
-
-
-Result SwCanvas::target(uint32_t* buffer, uint32_t stride, uint32_t w, uint32_t h, ColorSpace cs) noexcept
-{
-#ifdef THORVG_SW_RASTER_SUPPORT
-    if (cs == ColorSpace::Unknown) return Result::InvalidArguments;
-    if (cs == ColorSpace::Grayscale8) return Result::NonSupport;
-
-    if (pImpl->status != Status::Damaged && pImpl->status != Status::Synced) {
-        return Result::InsufficientCondition;
-    }
-
-    //We know renderer type, avoid dynamic_cast for performance.
-    auto renderer = static_cast<SwRenderer*>(pImpl->renderer);
-    if (!renderer) return Result::MemoryCorruption;
-
-    if (!renderer->target(buffer, stride, w, h, cs)) return Result::InvalidArguments;
-    pImpl->vport = {{0, 0}, {(int32_t)w, (int32_t)h}};
-    renderer->viewport(pImpl->vport);
-
-    //FIXME: The value must be associated with an individual canvas instance.
-    ImageLoader::cs = static_cast<ColorSpace>(cs);
-
-    //Paints must be updated again with this new target.
-    pImpl->status = Status::Damaged;
-
-    return Result::Success;
-#endif
-    return Result::NonSupport;
 }
 
 

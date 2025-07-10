@@ -1,6 +1,7 @@
 #ifndef __THORVG_CAPI_H__
 #define __THORVG_CAPI_H__
 
+#include "config.h"
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -112,11 +113,13 @@ typedef enum {
  * @brief Enumeration specifying the methods of combining the 8-bit color channels into 32-bit color.
  */
 typedef enum {
-    TVG_COLORSPACE_ABGR8888 = 0,  ///< The channels are joined in the order: alpha, blue, green, red. Colors are alpha-premultiplied.
-    TVG_COLORSPACE_ARGB8888,      ///< The channels are joined in the order: alpha, red, green, blue. Colors are alpha-premultiplied.
-    TVG_COLORSPACE_ABGR8888S,     ///< The channels are joined in the order: alpha, blue, green, red. Colors are un-alpha-premultiplied. (since 0.13)
-    TVG_COLORSPACE_ARGB8888S,     ///< The channels are joined in the order: alpha, red, green, blue. Colors are un-alpha-premultiplied. (since 0.13)
-    TVG_COLORSPACE_UNKNOWN = 255, ///< Unknown channel data. This is reserved for an initial ColorSpace value. (since 1.0)
+    TVG_COLORSPACE_ABGR8888   = 0, ///< The channels are joined in the order: alpha, blue, green, red. Colors are alpha-premultiplied. (a << 24 | b << 16 | g << 8 | r)
+    TVG_COLORSPACE_ARGB8888   = 1, ///< The channels are joined in the order: alpha, red, green, blue. Colors are alpha-premultiplied. (a << 24 | r << 16 | g << 8 | b)
+    TVG_COLORSPACE_ABGR8888S  = 2, ///< The channels are joined in the order: alpha, blue, green, red. Colors are un-alpha-premultiplied. @since 0.13
+    TVG_COLORSPACE_ARGB8888S  = 3, ///< The channels are joined in the order: alpha, red, green, blue. Colors are un-alpha-premultiplied. @since 0.13
+    TVG_COLORSPACE_RGB565     = 4,
+    TVG_COLORSPACE_GRAYSCALE8 = 5,
+    TVG_COLORSPACE_UNKNOWN    = 255
 } Tvg_Colorspace;
 
 
@@ -409,7 +412,7 @@ TVG_API Tvg_Canvas* tvg_swcanvas_create(void);
 *
 * @see Tvg_Colorspace
 */
-TVG_API Tvg_Result tvg_swcanvas_set_target(Tvg_Canvas* canvas, uint32_t* buffer, uint32_t stride, uint32_t w, uint32_t h, Tvg_Colorspace cs);
+TVG_API Tvg_Result tvg_swcanvas_set_target(Tvg_Canvas* canvas, PIXEL_TYPE* buffer, uint32_t stride, uint32_t w, uint32_t h, Tvg_Colorspace cs);
 
 
 /** \} */   // end defgroup ThorVGCapi_SwCanvas
@@ -615,7 +618,10 @@ TVG_API Tvg_Result tvg_canvas_update(Tvg_Canvas* canvas);
 *       To ensure drawing is complete, call tvg_canvas_sync() afterwards.
 * @see tvg_canvas_sync()
 */
-TVG_API Tvg_Result tvg_canvas_draw(Tvg_Canvas* canvas, bool clear);
+// For 32 bit colors the value 0x00000000 as set by rasterClear is transparent
+// Incase of 16 bit color 0x0000 is black. 
+// Therefor a (none black) background color can be specified:
+TVG_API Tvg_Result tvg_canvas_draw(Tvg_Canvas* canvas, bool clear, uint32_t colorWithOpacity);
 
 
 /*!
@@ -1843,7 +1849,7 @@ TVG_API Tvg_Result tvg_picture_load(Tvg_Paint* paint, const char* path);
 *
 * @since 0.9
 */
-TVG_API Tvg_Result tvg_picture_load_raw(Tvg_Paint* paint, uint32_t *data, uint32_t w, uint32_t h, Tvg_Colorspace cs, bool copy);
+TVG_API Tvg_Result tvg_picture_load_raw(Tvg_Paint* paint, PIXEL_TYPE *data, uint32_t w, uint32_t h, Tvg_Colorspace cs, bool copy);
 
 
 /*!

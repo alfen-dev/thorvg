@@ -149,7 +149,7 @@ struct PictureImpl : Picture
         return load(loader);
     }
 
-    Result load(uint32_t* data, uint32_t w, uint32_t h, ColorSpace cs, bool copy)
+    Result load(PixelType* data, uint32_t w, uint32_t h, ColorSpace cs, bool copy)
     {
         if (!data || w <= 0 || h <= 0 || cs == ColorSpace::Unknown)  return Result::InvalidArguments;
         if (vector || bitmap) return Result::InsufficientCondition;
@@ -194,7 +194,7 @@ struct PictureImpl : Picture
         return new PictureIterator(vector);
     }
 
-    uint32_t* data(uint32_t* w, uint32_t* h)
+    PixelType* data(uint32_t* w, uint32_t* h)
     {
         //Try it, If not loaded yet.
         load();
@@ -206,7 +206,7 @@ struct PictureImpl : Picture
             if (w) *w = 0;
             if (h) *h = 0;
         }
-        if (bitmap) return bitmap->buf32;
+        if (bitmap) return bitmap->pixelBuffer;
         else return nullptr;
     }
 

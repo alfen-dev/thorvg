@@ -83,10 +83,10 @@ struct Canvas::Impl
         return Result::Success;
     }
 
-    Result draw(bool clear)
+    Result draw(bool clear, uint32_t colorWithOpacity)
     {
         if (status == Status::Drawing) return Result::InsufficientCondition;
-        if (clear && !renderer->clear()) return Result::InsufficientCondition;
+        if (clear && !renderer->clear(colorWithOpacity)) return Result::InsufficientCondition;
         if (scene->paints().empty()) return Result::InsufficientCondition;
         if (status == Status::Damaged) update(nullptr, false);
         if (!renderer->preRender()) return Result::InsufficientCondition;
