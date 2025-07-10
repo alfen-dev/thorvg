@@ -21,7 +21,10 @@
 #define THORVG_THREAD_SUPPORT
 #endif
 
-#define RENDER_POOL_SIZE_REDUCED 1200L
+//2048L  
+//4096L
+//8192L
+#define RENDER_POOL_SIZE_REDUCED 8192L
 
 
 #define THORVG_LOG_ENABLED 1
@@ -70,17 +73,29 @@ int SEGGER_RTT_printf(unsigned BufferIndex, const char * sFormat, ...);
 
 #define FILENAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #define TVGERR(tag, fmt, ...) SEGGER_RTT_printf(0, "%20s %4u TVG Err %s: " fmt "\n", FILENAME, __LINE__, tag, ##__VA_ARGS__)
+#define TVGDBG(tag, fmt, ...) SEGGER_RTT_printf(0, "%20s %4u TVG Dbg %s: " fmt "\n", FILENAME, __LINE__, tag, ##__VA_ARGS__)
 #define TVGLOG(tag, fmt, ...) SEGGER_RTT_printf(0, "%20s %4u TVG Inf %s: " fmt "\n", FILENAME, __LINE__, tag, ##__VA_ARGS__)
 
 #elif 1
 
+#define NR_FILL_SPACES(nr) ( (nr <  -999) ?     "" : \
+                            ((nr <   -99) ?    " " : \
+                            ((nr <    -9) ?   "  " : \
+                            ((nr <     0) ?  "   " : \
+                            ((nr <    10) ? "    " : \
+                            ((nr <   100) ?  "   " : \
+                            ((nr <  1000) ?   "  " : \
+                            ((nr < 10000) ?    " " : ""))))))))
+
 #define FILENAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-#define TVGERR(tag, fmt, ...) printf("%20s %4u TVG Err %s: " fmt "\n", FILENAME, __LINE__, tag, ##__VA_ARGS__)
-#define TVGLOG(tag, fmt, ...) printf("%20s %4u TVG Inf %s: " fmt "\n", FILENAME, __LINE__, tag, ##__VA_ARGS__)
+#define TVGERR(tag, fmt, ...) printf("%20s:%u %s TVG Err %s: " fmt "\n", FILENAME, __LINE__, NR_FILL_SPACES(__LINE__), tag, ##__VA_ARGS__)
+#define TVGDBG(tag, fmt, ...) printf("%20s:%u %s TVG Dbg %s: " fmt "\n", FILENAME, __LINE__, NR_FILL_SPACES(__LINE__), tag, ##__VA_ARGS__)
+#define TVGLOG(tag, fmt, ...) printf("%20s:%u %s TVG Inf %s: " fmt "\n", FILENAME, __LINE__, NR_FILL_SPACES(__LINE__), tag, ##__VA_ARGS__)
 
 #else 
 
 #define TVGERR(tag, fmt, ...) do {} while(0)
+#define TVGDBG(tag, fmt, ...) do {} while(0)
 #define TVGLOG(tag, fmt, ...) do {} while(0)
 
 #endif
